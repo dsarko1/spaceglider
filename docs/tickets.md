@@ -25,10 +25,6 @@ Un ticket se cierra solo cuando se cumplen todos sus criterios de aceptación.
 
 ## ✅ Completados
 
-_Ninguno todavía._
-
----
-
 ## SG-001: Repositorio Git, `.gitignore` y documentación base
 
 **Objetivo:** dejar el repo listo para trabajar, con secretos protegidos y documentación desde el primer commit.
@@ -37,6 +33,9 @@ _Ninguno todavía._
 - [x] Repositorio inicializado en `main` con remote `origin`
 - [x] `.gitignore` protege `.env`, `node_modules/`, `out/`, `dist/`
 - [x] `.env.example` creado sin valores reales
-- [ ] `README.md`, `CHANGELOG.md` y `docs/DECISIONES.md` creados
-- [ ] `docs/TICKETS.md` con el backlog
-- [ ] Commits hechos y subidos a `origin`
+- [x] `README.md`, `CHANGELOG.md` y `docs/DECISIONES.md` creados
+- [x] `docs/TICKETS.md` con el backlog
+- [x] Commits hechos y subidos a `origin`
+
+---
+
