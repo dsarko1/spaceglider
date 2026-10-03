@@ -20,3 +20,9 @@ npm-debug.log*
 Thumbs.db
 .DS_Store
 .idea/
+
+# --- Cachés y reportes de herramientas ---
+.oxlintcache
+*.tsbuildinfo
+coverage/
+.npm
