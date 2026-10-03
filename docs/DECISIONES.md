@@ -65,3 +65,26 @@ Registro de por qué elegimos cada cosa. Se agrega una entrada nueva por decisi�
 - **Decisión:** `src/main/main.ts`, `src/preload/preload.ts` y `src/renderer/renderer.ts`, con `index.html` en la raíz.
 - **Motivo:** conservar los nombres que usa el scaffold evita cambiar las rutas compiladas (`preload.cjs`, `main.cjs`). Mover `index.html` exigiría configurar la raíz de Vite con riesgo de romper el empaquetado.
 - **Alternativa descartada:** archivos `index.ts` en cada carpeta, por riesgo de colisión de nombres en la salida de Vite.
+
+## D-013: Variables de entorno con dotenv (2026-10-03)
+
+- **Alternativas:** `process.loadEnvFile()` de Node (sin dependencias, pero no verificamos que lo soporte el Node de Electron 44) e inyectar la key en el build con Vite (descartada: deja la key dentro del código compilado).
+- **Decisión:** `dotenv`, validado en `loadConfig()` al arrancar. Los mensajes de error nombran la variable, nunca su valor.
+- **Limitación conocida:** lee `.env` desde la carpeta del proyecto, así que en una app empaquetada no existe. Se resuelve en el ticket de empaquetado.
+
+## D-014: Cliente único de Riot, independiente de Electron (2026-10-03)
+
+- **Decisión:** todo pedido a Riot pasa por `RiotClient` (`src/services/riot`). Envía la key en el header `X-Riot-Token`, usa timeout de 10 s y traduce los errores a `RiotApiError` con un `kind`.
+- **Política ante 429:** Riot pide frenar durante los segundos de `Retry-After`. Reintentamos hasta 2 veces si la espera es de 10 s o menos; con esperas mayores no insistimos e informamos cuánto esperar.
+- **Limitación conocida:** el control es por pedido, sin coordinación global. Si más adelante lanzamos muchas llamadas en paralelo (por ejemplo, detalle de varias partidas), hará falta una cola con límite de concurrencia y caché.
+
+## D-015: Resultados IPC tipados en vez de errores lanzados (2026-10-03)
+
+- **Decisión:** las operaciones que pueden fallar devuelven `IpcResult<T>` (`{ ok: true, data }` o `{ ok: false, error }`), construido con `toResult` en `src/main/ipc.ts`.
+- **Motivo:** un error lanzado en el main llega al renderer sin sus campos (`kind`, `status`), y la interfaz no puede decidir qué mostrar.
+- **Pendiente menor:** `IpcErrorInfo.kind` es un `string`. Si la interfaz empieza a distinguir tipos de error, conviene tiparlo con la unión de `RiotErrorKind`.
+
+## D-016: Endpoint de estado como prueba de conexión (2026-10-03)
+
+- **Decisión:** el botón de prueba consulta `/lol/status/v4/platform-data` en el servidor configurado.
+- **Motivo:** exige la key, así que sirve para validarla, y según la documentación de una librería de la comunidad no cuenta contra los límites de la aplicación. No lo verificamos en la documentación oficial.

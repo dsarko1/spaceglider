@@ -12,6 +12,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 - Linter y formateador con oxlint y oxfmt, y script de typecheck (SG-002).
 - Comunicación IPC de prueba: botón Ping en la interfaz que consulta al proceso main (SG-003).
 - Contrato IPC compartido en `src/shared/ipc.ts` (SG-003).
+- Carga y validación de variables de entorno con `dotenv` (SG-004).
+- Cliente base de la API de Riot con errores propios, timeout y reintentos ante límite de peticiones (SG-004).
+- Botón "Probar conexión con Riot" que verifica la key desde la interfaz (SG-004).
 
 ### Changed
 
