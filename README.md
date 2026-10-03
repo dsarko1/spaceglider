@@ -2,8 +2,7 @@
 
 Companion app de escritorio para League of Legends, similar a páginas como OP.GG o U.GG, pero de uso local. Busca invocadores y muestra su rango, maestría y partidas recientes usando la API de Riot Games.
 
-> 🚧 **Estado:** en desarrollo temprano. Todavía no hay una app ejecutable.
-> 🚧 **Estado:** en desarrollo temprano. La app base de Electron abre una ventana, pero todavía no tiene funciones.
+> > 🚧 **Estado:** en desarrollo temprano. La app abre una ventana con un botón de prueba de comunicación (Ping), pero todavía no tiene funciones de League of Legends.
 
 ## Stack
 
@@ -51,17 +50,37 @@ npm start
 | `npm run package`   | Empaqueta la app                               |
 | `npm run make`      | Genera instaladores                            |
 
-## Estructura actual
+## Estructura
 
 ```
 src/
-├── main.ts       # Proceso main (crea la ventana)
-├── preload.ts    # Puente entre main y renderer
-├── renderer.ts   # Código de la interfaz
-└── index.css     # Estilos
+├── main/
+│   ├── main.ts          # Crea la ventana y arranca la app
+│   └── ipc.ts           # Handlers IPC: responden a los pedidos del renderer
+├── preload/
+│   └── preload.ts       # Puente seguro: expone window.spaceglider
+├── renderer/
+│   ├── renderer.ts      # Lógica de la interfaz
+│   ├── global.d.ts      # Tipos de window.spaceglider
+│   └── styles/index.css
+├── services/riot/       # (vacío) cliente de la API de Riot
+├── config/              # (vacío) lectura de variables de entorno
+├── shared/
+│   └── ipc.ts           # Contrato IPC: canales y tipos compartidos
+└── declarations.d.ts
 ```
 
-> Esta estructura es provisoria: se reorganiza en `src/main`, `src/preload` y `src/renderer` en SG-003.
+`index.html` queda en la raíz del proyecto.
+
+## Cómo se comunican las partes
+
+La interfaz (renderer) no tiene acceso a Node ni a la API key. Para pedir datos usa el puente del preload:
+
+```
+Renderer (botón) → Preload (window.spaceglider) → IPC → Main → respuesta
+```
+
+Para sumar una función nueva: declararla en `src/shared/ipc.ts`, implementar el handler en `src/main/ipc.ts` y exponerla en `src/preload/preload.ts`.
 
 ## Configuración
 

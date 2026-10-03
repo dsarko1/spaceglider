@@ -53,3 +53,15 @@ Registro de por qué elegimos cada cosa. Se agrega una entrada nueva por decisi�
 
 - **Decisión:** mantener nuestro `.gitignore` y sumarle solo las reglas útiles del de la plantilla, que era una lista genérica de 130 líneas (Next.js, Nuxt, Gatsby...).
 - **Motivo:** más fácil de leer y mantener. Las reglas de `.env` están cubiertas.
+
+## D-011: IPC con funciones específicas y contrato compartido (2026-10-03)
+
+- **Decisión:** el preload expone con `contextBridge` solo funciones concretas (`window.spaceglider.ping()`), nunca `ipcRenderer` completo. Los nombres de canales y los tipos viven en `src/shared/ipc.ts`.
+- **Motivo:** si el renderer tuviera `ipcRenderer`, cualquier script de la página podría mandar mensajes arbitrarios al main. Con un contrato compartido, TypeScript detecta errores de tipeo en los canales.
+- **Relacionada con:** D-004 (la API key vive solo en el main).
+
+## D-012: Estructura de `src/` y nombres de archivo (2026-10-03)
+
+- **Decisión:** `src/main/main.ts`, `src/preload/preload.ts` y `src/renderer/renderer.ts`, con `index.html` en la raíz.
+- **Motivo:** conservar los nombres que usa el scaffold evita cambiar las rutas compiladas (`preload.cjs`, `main.cjs`). Mover `index.html` exigiría configurar la raíz de Vite con riesgo de romper el empaquetado.
+- **Alternativa descartada:** archivos `index.ts` en cada carpeta, por riesgo de colisión de nombres en la salida de Vite.

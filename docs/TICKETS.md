@@ -5,9 +5,6 @@ Un ticket se cierra solo cuando se cumplen todos sus criterios de aceptación.
 
 ## 🔄 En progreso
 
-| SG-003 | Estructura de carpetas y comunicación IPC de prueba (ping) | mediano | SG-002 |
-(incluye mover src/ y ajustar configs de Vite/Forge)
-
 ## 📋 Pendientes
 
 | ID     | Título                                                               | Tamaño  | Depende de |
@@ -19,6 +16,7 @@ Un ticket se cierra solo cuando se cumplen todos sus criterios de aceptación.
 | SG-008 | Mostrar maestría de campeones                                        | chico   | SG-006     |
 | SG-009 | Lista de partidas recientes                                          | grande  | SG-006     |
 | SG-010 | Filtros de partidas (cola, campeón, resultado)                       | mediano | SG-009     |
+| SG-011 | Configurar Content Security Policy en la ventana                     | chico   | SG-003     |
 
 ## ✅ Completados
 
@@ -48,3 +46,16 @@ Un ticket se cierra solo cuando se cumplen todos sus criterios de aceptación.
 - [x] Commits hechos y subidos a `origin`
 
 ---
+
+## SG-003: Estructura de carpetas y comunicación IPC de prueba
+
+**Criterios de aceptación:**
+
+- [x] Código movido a `src/main`, `src/preload` y `src/renderer`
+- [x] Existen `src/shared`, `src/services/riot` y `src/config`
+- [x] `npm start` sigue abriendo la ventana
+- [x] Un botón "Ping" pide una respuesta al main y la muestra
+- [x] El renderer no tiene acceso directo a Node ni a `ipcRenderer`
+- [x] `npm run typecheck` y `npm run lint` pasan
+- [x] README y `DECISIONES.md` actualizados
+- [x] Commits hechos y subidos
