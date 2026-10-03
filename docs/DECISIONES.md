@@ -32,3 +32,24 @@ Registro de por qué elegimos cada cosa. Se agrega una entrada nueva por decisi�
 ## D-006: Prefijo de tickets `SG-` (2026-10-03)
 
 - **Decisión:** `SG-` (Spaceglider) en lugar de `RA-`, que venía del nombre anterior (Rift Assistant).
+
+## D-007: Versiones y plantilla del scaffold (2026-10-03)
+
+- **Decisión:** proyecto generado con `create-electron-app` usando `--template=vite --typescript` (Forge 8, Electron 44, TypeScript 6, Vite 8).
+- **Contexto:** el comando `--template=vite-typescript` de la documentación y de muchos tutoriales ya no funciona en esta versión.
+- **Riesgo:** la documentación consultada marcaba el soporte de Vite como experimental desde Forge 7.5.0 (no verificamos si sigue así en la v8). No actualizamos versiones mayores sin probar, y `package-lock.json` está commiteado.
+
+## D-008: Mantener oxlint y oxfmt (2026-10-03)
+
+- **Decisión:** conservar el linter (oxlint) y el formateador (oxfmt) que trae la plantilla.
+- **Motivo:** trabajamos dos personas; el formato automático evita discusiones de estilo. Se corren con `npm run lint` antes de cada commit.
+
+## D-009: Licencia UNLICENSED (2026-10-03)
+
+- **Decisión:** `"license": "UNLICENSED"` en `package.json`, en lugar del `MIT` que traía la plantilla.
+- **Motivo:** no hay una decisión tomada sobre licencia. "Todos los derechos reservados" es lo más conservador y se puede abrir después, pero no al revés.
+
+## D-010: `.gitignore` propio y compacto (2026-10-03)
+
+- **Decisión:** mantener nuestro `.gitignore` y sumarle solo las reglas útiles del de la plantilla, que era una lista genérica de 130 líneas (Next.js, Nuxt, Gatsby...).
+- **Motivo:** más fácil de leer y mantener. Las reglas de `.env` están cubiertas.

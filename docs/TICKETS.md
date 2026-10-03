@@ -5,16 +5,13 @@ Un ticket se cierra solo cuando se cumplen todos sus criterios de aceptación.
 
 ## 🔄 En progreso
 
-| ID     | Título                                             | Tamaño | Depende de |
-| ------ | -------------------------------------------------- | ------ | ---------- |
-| SG-001 | Repositorio Git, `.gitignore` y documentación base | chico  | -          |
+| SG-003 | Estructura de carpetas y comunicación IPC de prueba (ping) | mediano | SG-002 |
+(incluye mover src/ y ajustar configs de Vite/Forge)
 
 ## 📋 Pendientes
 
 | ID     | Título                                                               | Tamaño  | Depende de |
 | ------ | -------------------------------------------------------------------- | ------- | ---------- |
-| SG-002 | Crear proyecto Electron + TypeScript con Forge                       | mediano | SG-001     |
-| SG-003 | Estructura de carpetas y comunicación IPC de prueba (ping)           | mediano | SG-002     |
 | SG-004 | Configuración de `.env` y cliente base de Riot (fetch, errores, 429) | mediano | SG-003     |
 | SG-005 | Buscar Riot ID (nombre#tag) y obtener PUUID                          | mediano | SG-004     |
 | SG-006 | UI de búsqueda y perfil básico (ícono, nivel)                        | mediano | SG-005     |
@@ -36,6 +33,18 @@ Un ticket se cierra solo cuando se cumplen todos sus criterios de aceptación.
 - [x] `.env.example` creado sin valores reales
 - [x] `README.md`, `CHANGELOG.md` y `docs/DECISIONES.md` creados
 - [x] `docs/TICKETS.md` con el backlog
+- [x] Commits hechos y subidos a `origin`
+
+## SG-002: Crear proyecto Electron + TypeScript con Forge
+
+**Criterios de aceptación:**
+
+- [x] Proyecto Electron Forge con TypeScript funcionando en el repo
+- [x] `npm start` abre una ventana de la app
+- [x] `.env`, `.env.example` y `.gitignore` intactos; `.env` sigue ignorado
+- [x] `package.json` con nombre `spaceglider` y descripción correcta
+- [x] README con instrucciones de instalación y ejecución
+- [x] `CHANGELOG.md` y `docs/TICKETS.md` actualizados
 - [x] Commits hechos y subidos a `origin`
 
 ---
