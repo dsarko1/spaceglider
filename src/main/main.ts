@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { registerIpcHandlers } from './ipc';
+import { loadConfig } from '../config/env';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -35,9 +36,14 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  const config = loadConfig(); // si falta algo, falla acá con un mensaje claro
+  // OJO: solo logueamos datos NO secretos. Nunca la key.
+  console.log(
+    `[config] platform=${config.riotPlatform} region=${config.riotRegion}`,
+  );
+
   registerIpcHandlers(); // antes de createWindow: el handler tiene que existir cuando el renderer pregunte
   createWindow();
-  // ... lo demás queda igual
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
