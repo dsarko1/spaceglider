@@ -1,0 +1,22 @@
+# --- Dependencias ---
+node_modules/
+
+# --- Secretos: NUNCA se suben ---
+.env
+.env.*
+# Excepción: la plantilla sí se sube (debe ir DESPUÉS de .env.*)
+!.env.example
+
+# --- Salida de build/empaquetado ---
+out/
+dist/
+.vite/
+
+# --- Logs ---
+*.log
+npm-debug.log*
+
+# --- Archivos del sistema / editores ---
+Thumbs.db
+.DS_Store
+.idea/
