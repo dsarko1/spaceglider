@@ -3,6 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { registerIpcHandlers } from './ipc';
 import { loadConfig } from '../config/env';
+import { RiotClient } from '../services/riot/riotClient';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -42,8 +43,16 @@ app.whenReady().then(() => {
     `[config] platform=${config.riotPlatform} region=${config.riotRegion}`,
   );
 
-  registerIpcHandlers(); // antes de createWindow: el handler tiene que existir cuando el renderer pregunte
+  // El cliente se crea una sola vez; la key nunca sale del proceso main.
+  const riotClient = new RiotClient({
+    apiKey: config.riotApiKey,
+    platform: config.riotPlatform,
+    region: config.riotRegion,
+  });
+
+  registerIpcHandlers(riotClient); // antes de createWindow
   createWindow();
+  // ... lo demás queda igual
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
