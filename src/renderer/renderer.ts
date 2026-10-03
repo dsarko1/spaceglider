@@ -1,19 +1,30 @@
-/**
- * This file will automatically be loaded by vite and run in the "renderer" context.
- * To learn more about the differences between the "main" and the "renderer" context in
- * Electron, visit:
- *
- * https://electronjs.org/docs/tutorial/process-model
- *
- * By default, Node.js integration in this file is disabled. When enabling Node.js integration
- * in a renderer process, please be aware of potential security implications. You can read
- * more about security risks here:
- *
- * https://electronjs.org/docs/tutorial/security
- */
-
 import './styles/index.css';
 
-console.log(
-  '👋 This message is being logged by the renderer process, included via Vite',
-);
+// querySelector busca un elemento por su selector CSS.
+// Devuelve null si no existe, por eso el tipo incluye esa posibilidad.
+const pingButton = document.querySelector<HTMLButtonElement>('#ping-button');
+const pingResult = document.querySelector<HTMLParagraphElement>('#ping-result');
+
+// Si el HTML y el TS se desincronizan, preferimos enterarnos acá con un
+// mensaje claro, y no con un error confuso más adelante.
+if (!pingButton || !pingResult) {
+  throw new Error('No se encontraron los elementos del ping en index.html');
+}
+
+pingButton.addEventListener('click', async () => {
+  pingButton.disabled = true; // evita varios clics mientras se espera la respuesta
+
+  try {
+    // window.spaceglider lo publica el preload (src/preload/preload.ts)
+    const response = await window.spaceglider.ping();
+    const hora = new Date(response.timestamp).toLocaleTimeString();
+    // textContent trata el valor como texto plano. Nunca uses innerHTML
+    // con datos externos (como los que lleguen de Riot): permite inyectar HTML.
+    pingResult.textContent = `${response.message} (${hora})`;
+  } catch (error) {
+    pingResult.textContent = 'Error al hacer ping. Revisá la consola.';
+    console.error(error);
+  } finally {
+    pingButton.disabled = false; // se ejecuta siempre, haya error o no
+  }
+});
