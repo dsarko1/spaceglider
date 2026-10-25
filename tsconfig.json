@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "jsx": "react-jsx",
+    "sourceMap": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*", "*.ts", "*.mts"]
+}
