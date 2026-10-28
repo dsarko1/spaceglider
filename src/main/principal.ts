@@ -9,9 +9,10 @@ ipcMain.handle('riot:buscar-invocador', (_evento, riotId: unknown) =>
 
 ipcMain.handle(
   'historial:buscar',
-  (_evento, riotId: unknown, cantidad: unknown) =>
+  (_evento, riotId: unknown, inicio: unknown, cantidad: unknown) =>
     obtenerHistorialInvocador(
       riotId as string,
+      inicio === undefined ? undefined : (inicio as number),
       cantidad === undefined ? undefined : (cantidad as number),
     ),
 );

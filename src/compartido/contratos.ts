@@ -51,6 +51,7 @@ export interface APIEnlaceSpaceglider {
   buscarInvocadorPorRiotId(riotId: string): Promise<ResultadoBusquedaInvocador>;
   buscarHistorialInvocador(
     riotId: string,
+    inicio?: number,
     cantidad?: number,
   ): Promise<ResultadoHistorialInvocador>;
 }

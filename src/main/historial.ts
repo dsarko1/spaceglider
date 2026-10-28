@@ -19,13 +19,17 @@ const MENSAJES: Record<CodigoErrorBusqueda, string> = {
   RESPUESTA_INVALIDA: 'Riot devolvió una respuesta que no se pudo interpretar.',
 };
 const MAX_LONGITUD_RIOT_ID = 64;
-const MAX_CANTIDAD_PARTIDAS = 100;
+const MAX_CANTIDAD_PARTIDAS = 50;
 const DURACION_CACHE_IDS_MS = 5 * 60 * 1000;
 const DURACION_CACHE_PARTIDAS_MS = 10 * 60 * 1000;
 const MAX_ENTRADAS_CACHE = 100;
 
 type Objeto = Record<string, unknown>;
-type EntradaIds = { guardadoEn: number; cantidad: number; ids: string[] };
+type EntradaIds = {
+  guardadoEn: number;
+  cantidadCubierta: number;
+  idsPorIndice: Map<number, string>;
+};
 type EntradaPartida = { guardadoEn: number; resumen: ResumenPartida };
 
 const cacheIds = new Map<string, EntradaIds>();
@@ -132,11 +136,14 @@ function codigoError(errorRecibido: unknown): CodigoErrorBusqueda {
 
 export async function obtenerHistorialInvocador(
   riotId: string,
+  inicio = 0,
   cantidad = 10,
 ): Promise<ResultadoHistorialInvocador> {
   if (
     typeof riotId !== 'string' ||
     riotId.length > MAX_LONGITUD_RIOT_ID ||
+    !Number.isInteger(inicio) ||
+    inicio < 0 ||
     !Number.isInteger(cantidad) ||
     cantidad < 1 ||
     cantidad > MAX_CANTIDAD_PARTIDAS
@@ -163,28 +170,47 @@ export async function obtenerHistorialInvocador(
     if (!cuenta) throw new Error('RESPUESTA_INVALIDA');
 
     const idsCacheados = cacheIds.get(cuenta.puuid);
-    let ids =
+    let entradaIds =
       idsCacheados &&
-      idsCacheados.cantidad >= cantidad &&
       estaVigente(idsCacheados.guardadoEn, DURACION_CACHE_IDS_MS)
-        ? idsCacheados.ids
-        : undefined;
-    if (!ids) {
+        ? idsCacheados
+        : { guardadoEn: 0, cantidadCubierta: 0, idsPorIndice: new Map() };
+    const fin = inicio + cantidad;
+    for (let indice = inicio; indice < fin;) {
+      if (entradaIds.idsPorIndice.has(indice)) {
+        indice += 1;
+        continue;
+      }
+      const inicioFaltante = indice;
+      while (indice < fin && !entradaIds.idsPorIndice.has(indice)) {
+        indice += 1;
+      }
+      const cantidadFaltante = indice - inicioFaltante;
       const idsLeidos = leerIds(
         await pedirConReintentos(
-          `${raiz}/lol/match/v5/matches/by-puuid/${encodeURIComponent(cuenta.puuid)}/ids?start=0&count=${cantidad}`,
+          `${raiz}/lol/match/v5/matches/by-puuid/${encodeURIComponent(cuenta.puuid)}/ids?start=${inicioFaltante}&count=${cantidadFaltante}`,
           clave,
           0,
         ),
       );
       if (!idsLeidos) throw new Error('RESPUESTA_INVALIDA');
-      ids = idsLeidos;
-      guardarLimitado(cacheIds, cuenta.puuid, {
+      for (let posicion = 0; posicion < idsLeidos.length; posicion += 1) {
+        entradaIds.idsPorIndice.set(
+          inicioFaltante + posicion,
+          idsLeidos[posicion],
+        );
+      }
+      entradaIds = {
         guardadoEn: Date.now(),
-        cantidad,
-        ids,
-      });
+        cantidadCubierta: entradaIds.idsPorIndice.size,
+        idsPorIndice: entradaIds.idsPorIndice,
+      };
+      if (idsLeidos.length < cantidadFaltante) break;
     }
+    guardarLimitado(cacheIds, cuenta.puuid, entradaIds);
+    const ids = Array.from({ length: cantidad }, (_, posicion) =>
+      entradaIds.idsPorIndice.get(inicio + posicion),
+    ).filter((matchId): matchId is string => matchId !== undefined);
 
     const partidas: ResumenPartida[] = [];
     for (const matchId of ids) {
