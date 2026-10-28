@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type JSX } from 'react';
+import { useEffect, useState, type FormEvent, type JSX } from 'react';
 import type {
   CodigoErrorBusqueda,
   PerfilInvocador,
@@ -28,6 +28,94 @@ const nombresRango: Record<string, string> = {
   GRANDMASTER: 'Gran maestro',
   CHALLENGER: 'Retador',
 };
+
+const claveVersionDataDragon = 'spaceglider-version-data-dragon';
+const duracionCacheVersion = 24 * 60 * 60 * 1000;
+
+let solicitudVersionDataDragon: Promise<string | null> | null = null;
+
+function leerVersionGuardada(): { version: string; fecha: number } | null {
+  try {
+    const valorGuardado = localStorage.getItem(claveVersionDataDragon);
+    if (!valorGuardado) return null;
+
+    const datos: unknown = JSON.parse(valorGuardado);
+    if (
+      typeof datos !== 'object' ||
+      datos === null ||
+      !('version' in datos) ||
+      !('fecha' in datos) ||
+      typeof datos.version !== 'string' ||
+      !/^\d+\.\d+\.\d+$/.test(datos.version) ||
+      typeof datos.fecha !== 'number' ||
+      !Number.isFinite(datos.fecha)
+    ) {
+      return null;
+    }
+
+    return { version: datos.version, fecha: datos.fecha };
+  } catch {
+    return null;
+  }
+}
+
+function guardarVersion(version: string): void {
+  try {
+    localStorage.setItem(
+      claveVersionDataDragon,
+      JSON.stringify({ version, fecha: Date.now() }),
+    );
+  } catch {
+    // La imagen sigue disponible aunque el almacenamiento local esté bloqueado.
+  }
+}
+
+function obtenerVersionDataDragon(): Promise<string | null> {
+  if (!solicitudVersionDataDragon) {
+    solicitudVersionDataDragon = (async () => {
+      const versionGuardada = leerVersionGuardada();
+      if (
+        versionGuardada &&
+        Date.now() - versionGuardada.fecha < duracionCacheVersion
+      ) {
+        return versionGuardada.version;
+      }
+
+      try {
+        const respuesta = await fetch(
+          'https://ddragon.leagueoflegends.com/api/versions.json',
+        );
+        if (!respuesta.ok) {
+          throw new Error('No se pudo obtener la versión de Data Dragon.');
+        }
+
+        const versiones: unknown = await respuesta.json();
+        const version = Array.isArray(versiones) ? versiones[0] : null;
+        if (typeof version !== 'string' || !/^\d+\.\d+\.\d+$/.test(version)) {
+          throw new Error('Data Dragon devolvió una versión inválida.');
+        }
+
+        guardarVersion(version);
+        return version;
+      } catch {
+        return versionGuardada?.version ?? null;
+      }
+    })();
+  }
+
+  return solicitudVersionDataDragon;
+}
+
+function obtenerIniciales(nombre: string): string {
+  return (
+    nombre
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((parte) => parte.charAt(0).toLocaleUpperCase('es-AR'))
+      .join('') || '?'
+  );
+}
 
 function formatearError(codigo: CodigoErrorBusqueda, mensaje: string): string {
   switch (codigo) {
@@ -67,20 +155,42 @@ function IconoPerfil({
   profileIconId: number;
   gameName: string;
 }): JSX.Element {
+  const [version, setVersion] = useState<string | null>(null);
   const [imagenFallida, setImagenFallida] = useState(false);
+
+  useEffect(() => {
+    let componenteActivo = true;
+    void obtenerVersionDataDragon().then((versionObtenida) => {
+      if (componenteActivo) setVersion(versionObtenida);
+    });
+
+    return () => {
+      componenteActivo = false;
+    };
+  }, []);
 
   return (
     <div className="perfil__marco-icono">
       {imagenFallida ? (
-        <span className="perfil__icono-respaldo" aria-hidden="true">
-          {profileIconId}
+        <span
+          className="perfil__icono-respaldo"
+          role="img"
+          aria-label={`Iniciales de ${gameName}`}
+        >
+          {obtenerIniciales(gameName)}
         </span>
-      ) : (
+      ) : version ? (
         <img
           className="perfil__icono"
-          src={`https://cdn.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/${profileIconId}.jpg`}
+          src={`https://ddragon.leagueoflegends.com/cdn/${version}/img/profileicon/${profileIconId}.png`}
           alt={`Icono de perfil de ${gameName}`}
           onError={() => setImagenFallida(true)}
+        />
+      ) : (
+        <span
+          className="perfil__icono-cargando"
+          role="img"
+          aria-label={`Cargando icono de perfil de ${gameName}`}
         />
       )}
     </div>
@@ -92,6 +202,7 @@ function TarjetaPerfil({ perfil }: { perfil: PerfilInvocador }): JSX.Element {
     <section className="perfil" aria-labelledby="titulo-perfil">
       <div className="perfil__encabezado">
         <IconoPerfil
+          key={perfil.profileIconId}
           profileIconId={perfil.profileIconId}
           gameName={perfil.gameName}
         />
@@ -149,6 +260,7 @@ function TarjetaPerfil({ perfil }: { perfil: PerfilInvocador }): JSX.Element {
 export function Aplicacion(): JSX.Element {
   const [riotId, setRiotId] = useState('');
   const [estado, setEstado] = useState<EstadoBusqueda>({ tipo: 'inicial' });
+  const [seccion, setSeccion] = useState<'perfil' | 'historial'>('perfil');
 
   async function manejarBusqueda(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -210,104 +322,157 @@ export function Aplicacion(): JSX.Element {
   const hayError = estado.tipo === 'error';
 
   return (
-    <main className="pagina">
+    <div className="pagina">
       <header className="barra-superior">
-        <a className="marca" href="#" aria-label="Spaceglider, inicio">
+        <div className="marca">
           <span className="marca__simbolo" aria-hidden="true">
             S
           </span>
           <span>SPACEGLIDER</span>
-        </a>
+        </div>
         <span className="etiqueta-region">LA2 · LAS</span>
       </header>
 
-      <section className="presentacion" aria-labelledby="titulo-principal">
-        <p className="ceja">LEAGUE OF LEGENDS · COMPANION</p>
-        <h1 id="titulo-principal">
-          Tu perfil,
-          <br />
-          <span>a un vistazo.</span>
-        </h1>
-        <p className="descripcion">
-          Buscá un invocador por Riot ID y consultá su nivel y rango.
-        </p>
+      <nav className="navegacion" aria-label="Secciones principales">
+        <button
+          className="navegacion__boton"
+          type="button"
+          aria-current={seccion === 'perfil' ? 'page' : undefined}
+          aria-controls="contenido-principal"
+          onClick={() => setSeccion('perfil')}
+        >
+          Perfil
+        </button>
+        <button
+          className="navegacion__boton"
+          type="button"
+          aria-current={seccion === 'historial' ? 'page' : undefined}
+          aria-controls="contenido-principal"
+          onClick={() => setSeccion('historial')}
+        >
+          Historial
+        </button>
+      </nav>
 
-        <form className="busqueda" onSubmit={manejarBusqueda} noValidate>
-          <label className="busqueda__etiqueta" htmlFor="riot-id">
-            Riot ID
-          </label>
-          <div className="busqueda__fila">
-            <input
-              id="riot-id"
-              className="busqueda__entrada"
-              type="text"
-              value={riotId}
-              onChange={(evento) => {
-                setRiotId(evento.target.value);
-                if (hayError) setEstado({ tipo: 'inicial' });
-              }}
-              placeholder="Ejemplo: Faker#KR1"
-              autoComplete="off"
-              spellCheck={false}
-              maxLength={64}
-              aria-describedby={hayError ? 'mensaje-error' : 'ayuda-entrada'}
-              aria-invalid={
-                hayError && estado.origen === 'validacion' ? 'true' : undefined
-              }
-              disabled={estaCargando}
-            />
-            <button
-              className="busqueda__boton"
-              type="submit"
-              disabled={estaCargando}
-            >
-              {estaCargando ? (
-                <>
-                  <span className="busqueda__spinner" aria-hidden="true" />
-                  Buscando
-                </>
-              ) : (
-                'Buscar'
-              )}
-            </button>
-          </div>
-          <p className="busqueda__ayuda" id="ayuda-entrada">
-            Escribí el nombre y la etiqueta separados por #.
-          </p>
-        </form>
-
-        {hayError && (
-          <p className="mensaje mensaje--error" id="mensaje-error" role="alert">
-            {estado.mensaje}
-          </p>
-        )}
-
-        {estado.tipo === 'cargando' && (
-          <p
-            className="mensaje mensaje--cargando"
-            role="status"
-            aria-live="polite"
-          >
-            Buscando invocador en LA2…
-          </p>
-        )}
-
-        {estado.tipo === 'exito' ? (
-          <TarjetaPerfil perfil={estado.perfil} />
-        ) : (
-          !hayError &&
-          !estaCargando && (
-            <p className="estado-inicial" role="status" aria-live="polite">
-              Ingresá un Riot ID para ver el perfil.
+      <main className="contenido" id="contenido-principal">
+        {seccion === 'perfil' ? (
+          <section className="presentacion" aria-labelledby="titulo-principal">
+            <p className="ceja">LEAGUE OF LEGENDS · COMPANION</p>
+            <h1 id="titulo-principal">
+              Tu perfil,
+              <br />
+              <span>a un vistazo.</span>
+            </h1>
+            <p className="descripcion">
+              Buscá un invocador por Riot ID y consultá su nivel y rango.
             </p>
-          )
+
+            <form className="busqueda" onSubmit={manejarBusqueda} noValidate>
+              <label className="busqueda__etiqueta" htmlFor="riot-id">
+                Riot ID
+              </label>
+              <div className="busqueda__fila">
+                <input
+                  id="riot-id"
+                  className="busqueda__entrada"
+                  type="text"
+                  value={riotId}
+                  onChange={(evento) => {
+                    setRiotId(evento.target.value);
+                    if (hayError) setEstado({ tipo: 'inicial' });
+                  }}
+                  placeholder="Ejemplo: Faker#KR1"
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={64}
+                  aria-describedby={
+                    hayError ? 'mensaje-error' : 'ayuda-entrada'
+                  }
+                  aria-invalid={
+                    hayError && estado.origen === 'validacion'
+                      ? 'true'
+                      : undefined
+                  }
+                  disabled={estaCargando}
+                />
+                <button
+                  className="busqueda__boton"
+                  type="submit"
+                  disabled={estaCargando}
+                >
+                  {estaCargando ? (
+                    <>
+                      <span className="busqueda__spinner" aria-hidden="true" />
+                      Buscando
+                    </>
+                  ) : (
+                    'Buscar'
+                  )}
+                </button>
+              </div>
+              <p className="busqueda__ayuda" id="ayuda-entrada">
+                Escribí el nombre y la etiqueta separados por #.
+              </p>
+            </form>
+
+            {hayError && (
+              <p
+                className="mensaje mensaje--error"
+                id="mensaje-error"
+                role="alert"
+              >
+                {estado.mensaje}
+              </p>
+            )}
+
+            {estado.tipo === 'cargando' && (
+              <p
+                className="mensaje mensaje--cargando"
+                role="status"
+                aria-live="polite"
+              >
+                Buscando invocador en LA2…
+              </p>
+            )}
+
+            {estado.tipo === 'exito' ? (
+              <TarjetaPerfil perfil={estado.perfil} />
+            ) : (
+              !hayError &&
+              !estaCargando && (
+                <p className="estado-inicial" role="status" aria-live="polite">
+                  Ingresá un Riot ID para ver el perfil.
+                </p>
+              )
+            )}
+          </section>
+        ) : (
+          <section className="historial" aria-labelledby="titulo-principal">
+            <p className="ceja">LEAGUE OF LEGENDS · PARTIDAS</p>
+            <h1 id="titulo-principal">Historial de partidas</h1>
+            <p className="descripcion">
+              Tus partidas recientes van a aparecer en esta sección.
+            </p>
+            <div className="historial__vacio" role="status" aria-live="polite">
+              <span className="historial__simbolo" aria-hidden="true">
+                —
+              </span>
+              <p>
+                <strong>Todavía no hay historial</strong>
+                <span>
+                  Acá van a aparecer las últimas partidas del invocador que
+                  busques.
+                </span>
+              </p>
+            </div>
+          </section>
         )}
-      </section>
+      </main>
 
       <footer className="pie">
         <span>SPACEGLIDER</span>
         <span>HECHO PARA LA GRIETA</span>
       </footer>
-    </main>
+    </div>
   );
 }
