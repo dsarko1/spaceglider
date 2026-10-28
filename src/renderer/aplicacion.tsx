@@ -57,6 +57,18 @@ const clasesMarco: Record<string, string> = {
   GRANDMASTER: 'marco--gran-maestro',
   CHALLENGER: 'marco--retador',
 };
+const slugsEmblema: Record<string, string> = {
+  IRON: 'iron',
+  BRONZE: 'bronze',
+  SILVER: 'silver',
+  GOLD: 'gold',
+  PLATINUM: 'platinum',
+  EMERALD: 'emerald',
+  DIAMOND: 'diamond',
+  MASTER: 'master',
+  GRANDMASTER: 'grandmaster',
+  CHALLENGER: 'challenger',
+};
 
 let solicitudVersionDataDragon: Promise<string | null> | null = null;
 
@@ -254,6 +266,38 @@ function nombreDeRango(tier: string): string {
   return nombresRango[tier] ?? tier;
 }
 
+function urlEmblemaRango(tier?: string): string | null {
+  const slug = tier ? slugsEmblema[tier] : undefined;
+  return slug
+    ? `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-${slug}.png`
+    : null;
+}
+
+function EmblemaRango({
+  tier,
+  pequeno = false,
+}: {
+  tier?: string;
+  pequeno?: boolean;
+}): JSX.Element | null {
+  const [imagenFallida, setImagenFallida] = useState(false);
+  const url = urlEmblemaRango(tier);
+
+  if (!url || imagenFallida) return null;
+
+  return (
+    <img
+      className={`emblema-rango${pequeno ? ' emblema-rango--pequeno' : ''}`}
+      src={url}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      onError={() => setImagenFallida(true)}
+    />
+  );
+}
+
 function claseMarcoDeRango(tier?: string): string {
   return tier ? (clasesMarco[tier] ?? 'marco--neutro') : 'marco--neutro';
 }
@@ -379,6 +423,7 @@ function TarjetaPerfil({
                   aria-pressed={rango.queueType === colaActiva}
                   onClick={() => onCambiarCola(rango.queueType)}
                 >
+                  <EmblemaRango tier={rango.tier} pequeno />
                   {nombreDeCola(rango.queueType)}
                 </button>
               ))}
@@ -391,10 +436,13 @@ function TarjetaPerfil({
                       {nombreDeCola(rangoSeleccionado.queueType)}
                     </p>
                     <p className="rango__division">
-                      {nombreDeRango(rangoSeleccionado.tier)}
-                      {rangoSeleccionado.rank
-                        ? ` ${rangoSeleccionado.rank}`
-                        : ''}
+                      <EmblemaRango tier={rangoSeleccionado.tier} />
+                      <span>
+                        {nombreDeRango(rangoSeleccionado.tier)}
+                        {rangoSeleccionado.rank
+                          ? ` ${rangoSeleccionado.rank}`
+                          : ''}
+                      </span>
                     </p>
                   </div>
                   <div className="rango__puntos">

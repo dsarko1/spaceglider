@@ -606,7 +606,11 @@ h1 span {
 }
 
 .rangos__chip {
+  display: inline-flex;
   min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 0 12px;
   border: 1px solid var(--borde);
   border-radius: 999px;
@@ -658,10 +662,25 @@ h1 span {
 }
 
 .rango__division {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   margin-top: 4px;
   color: var(--acento);
   font-size: 14px;
   font-weight: 700;
+}
+
+.emblema-rango {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.emblema-rango--pequeno {
+  width: 18px;
+  height: 18px;
 }
 
 .rango__puntos {
