@@ -30,7 +30,9 @@ const nombresRango: Record<string, string> = {
 };
 
 const claveVersionDataDragon = 'spaceglider-version-data-dragon';
-const claveInvocadorRecordado = 'spaceglider-invocador-recordado';
+const clavePerfilFijado = 'spaceglider-perfil-fijado';
+const claveFavoritos = 'spaceglider-favoritos';
+const claveRecientes = 'spaceglider-recientes';
 const claveSidebarExpandida = 'spaceglider-sidebar-expandida';
 const duracionCacheVersion = 24 * 60 * 60 * 1000;
 const ordenElo = [
@@ -72,9 +74,117 @@ const slugsEmblema: Record<string, string> = {
 
 let solicitudVersionDataDragon: Promise<string | null> | null = null;
 
-interface InvocadorRecordado {
+interface PerfilFijado {
   riotId: string;
   perfil: PerfilInvocador;
+}
+
+interface InvocadorGuardado {
+  riotId: string;
+  gameName: string;
+  tagLine: string;
+  profileIconId: number;
+}
+
+interface InvocadorReciente extends InvocadorGuardado {
+  fecha: number;
+}
+
+function esInvocadorGuardado(valor: unknown): valor is InvocadorGuardado {
+  if (typeof valor !== 'object' || valor === null) return false;
+  if (
+    !('riotId' in valor) ||
+    !('gameName' in valor) ||
+    !('tagLine' in valor) ||
+    !('profileIconId' in valor)
+  ) {
+    return false;
+  }
+
+  return (
+    typeof valor.riotId === 'string' &&
+    typeof valor.gameName === 'string' &&
+    typeof valor.tagLine === 'string' &&
+    typeof valor.profileIconId === 'number' &&
+    Number.isInteger(valor.profileIconId) &&
+    valor.profileIconId >= 0
+  );
+}
+
+function leerPerfilFijado(): PerfilFijado | null {
+  try {
+    const valorGuardado = localStorage.getItem(clavePerfilFijado);
+    if (!valorGuardado) return null;
+
+    const datos: unknown = JSON.parse(valorGuardado);
+    if (
+      typeof datos !== 'object' ||
+      datos === null ||
+      !('riotId' in datos) ||
+      !('perfil' in datos) ||
+      typeof datos.riotId !== 'string' ||
+      !esPerfilInvocador(datos.perfil)
+    ) {
+      return null;
+    }
+
+    return { riotId: datos.riotId, perfil: datos.perfil };
+  } catch {
+    return null;
+  }
+}
+
+function leerFavoritos(): InvocadorGuardado[] {
+  try {
+    const valorGuardado = localStorage.getItem(claveFavoritos);
+    if (!valorGuardado) return [];
+
+    const datos: unknown = JSON.parse(valorGuardado);
+    if (!Array.isArray(datos)) return [];
+
+    const vistos = new Set<string>();
+    return datos
+      .filter(esInvocadorGuardado)
+      .filter((invocador) => {
+        const clave = invocador.riotId.toLocaleLowerCase('es-AR');
+        if (vistos.has(clave)) return false;
+        vistos.add(clave);
+        return true;
+      })
+      .slice(0, 20);
+  } catch {
+    return [];
+  }
+}
+
+function leerRecientes(): InvocadorReciente[] {
+  try {
+    const valorGuardado = localStorage.getItem(claveRecientes);
+    if (!valorGuardado) return [];
+
+    const datos: unknown = JSON.parse(valorGuardado);
+    if (!Array.isArray(datos)) return [];
+
+    const vistos = new Set<string>();
+    return datos
+      .filter(
+        (elemento): elemento is InvocadorReciente =>
+          esInvocadorGuardado(elemento) &&
+          'fecha' in elemento &&
+          typeof elemento.fecha === 'number' &&
+          Number.isFinite(elemento.fecha),
+      )
+      .sort((a, b) => b.fecha - a.fecha)
+      .filter((invocador) => {
+        const clave = invocador.riotId.toLocaleLowerCase('es-AR');
+        if (vistos.has(clave)) return false;
+        vistos.add(clave);
+        return true;
+      })
+      .slice(0, 8);
+  } catch {
+    return [];
+  }
 }
 
 function esPerfilInvocador(valor: unknown): valor is PerfilInvocador {
@@ -111,34 +221,31 @@ function esPerfilInvocador(valor: unknown): valor is PerfilInvocador {
   );
 }
 
-function leerInvocadorRecordado(): InvocadorRecordado | null {
+function guardarPerfilFijado(perfil: PerfilFijado | null): void {
   try {
-    const valorGuardado = localStorage.getItem(claveInvocadorRecordado);
-    if (!valorGuardado) return null;
-
-    const datos: unknown = JSON.parse(valorGuardado);
-    if (
-      typeof datos !== 'object' ||
-      datos === null ||
-      !('riotId' in datos) ||
-      !('perfil' in datos) ||
-      typeof datos.riotId !== 'string' ||
-      !esPerfilInvocador(datos.perfil)
-    ) {
-      return null;
+    if (perfil) {
+      localStorage.setItem(clavePerfilFijado, JSON.stringify(perfil));
+    } else {
+      localStorage.removeItem(clavePerfilFijado);
     }
-
-    return { riotId: datos.riotId, perfil: datos.perfil };
   } catch {
-    return null;
+    // La selección sigue disponible durante esta sesión si falla el almacenamiento.
   }
 }
 
-function guardarInvocadorRecordado(invocador: InvocadorRecordado): void {
+function guardarFavoritos(favoritos: InvocadorGuardado[]): void {
   try {
-    localStorage.setItem(claveInvocadorRecordado, JSON.stringify(invocador));
+    localStorage.setItem(claveFavoritos, JSON.stringify(favoritos));
   } catch {
-    // El perfil sigue disponible durante esta sesión aunque falle el almacenamiento.
+    // Los favoritos siguen disponibles durante esta sesión.
+  }
+}
+
+function guardarRecientes(recientes: InvocadorReciente[]): void {
+  try {
+    localStorage.setItem(claveRecientes, JSON.stringify(recientes));
+  } catch {
+    // Los recientes siguen disponibles durante esta sesión.
   }
 }
 
@@ -369,12 +476,20 @@ function IconoPerfil({
 
 function TarjetaPerfil({
   perfil,
+  favorito,
+  fijado,
   colaSeleccionada,
   onCambiarCola,
+  onAlternarFavorito,
+  onAlternarFijado,
 }: {
   perfil: PerfilInvocador;
+  favorito: boolean;
+  fijado: boolean;
   colaSeleccionada: string;
   onCambiarCola: (queueType: string) => void;
+  onAlternarFavorito: () => void;
+  onAlternarFijado: () => void;
 }): JSX.Element {
   const colas = colasDisponibles(perfil);
   const colaActiva = colas.some((rango) => rango.queueType === colaSeleccionada)
@@ -402,6 +517,33 @@ function TarjetaPerfil({
             Nivel <strong>{perfil.summonerLevel}</strong>
           </p>
         </div>
+      </div>
+
+      <div className="perfil__acciones">
+        <button
+          className="perfil__accion perfil__favorito"
+          type="button"
+          aria-label={
+            favorito
+              ? `Quitar a ${perfil.gameName}#${perfil.tagLine} de favoritos`
+              : `Agregar a ${perfil.gameName}#${perfil.tagLine} a favoritos`
+          }
+          aria-pressed={favorito}
+          onClick={onAlternarFavorito}
+        >
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="m10 2.5 2.3 4.7 5.2.8-3.8 3.7.9 5.3-4.6-2.5-4.6 2.5.9-5.3-3.8-3.7 5.2-.8z" />
+          </svg>
+          {favorito ? 'En favoritos' : 'Agregar a favoritos'}
+        </button>
+        <button
+          className="perfil__accion"
+          type="button"
+          aria-pressed={fijado}
+          onClick={onAlternarFijado}
+        >
+          {fijado ? 'Quitar de mi perfil' : 'Fijar como mi perfil'}
+        </button>
       </div>
 
       <div className="perfil__separador" />
@@ -473,96 +615,163 @@ function TarjetaPerfil({
 }
 
 export function Aplicacion(): JSX.Element {
-  const [invocadorRecordado, setInvocadorRecordado] = useState(
-    leerInvocadorRecordado,
+  const [perfilFijado, setPerfilFijado] = useState(leerPerfilFijado);
+  const [favoritos, setFavoritos] = useState(leerFavoritos);
+  const [recientes, setRecientes] = useState(leerRecientes);
+  const [riotId, setRiotId] = useState('');
+  const [estado, setEstado] = useState<EstadoBusqueda>(() =>
+    perfilFijado
+      ? { tipo: 'exito', perfil: perfilFijado.perfil }
+      : { tipo: 'inicial' },
   );
-  const [riotId, setRiotId] = useState(() => invocadorRecordado?.riotId ?? '');
-  const [estado, setEstado] = useState<EstadoBusqueda>({ tipo: 'inicial' });
   const [seccion, setSeccion] = useState<'perfil' | 'historial'>('perfil');
   const [colaSeleccionada, setColaSeleccionada] = useState('');
   const [sidebarExpandida, setSidebarExpandida] =
     useState(leerSidebarExpandida);
-  const restauracionIntentada = useRef(false);
-
-  async function cargarPerfilRecordado(): Promise<void> {
-    if (restauracionIntentada.current || estado.tipo === 'exito') return;
-    restauracionIntentada.current = true;
-
-    const recordado = invocadorRecordado ?? leerInvocadorRecordado();
-    if (!recordado) return;
-
-    setRiotId(recordado.riotId);
-    setColaSeleccionada(colaConMayorElo(recordado.perfil));
-    setEstado({ tipo: 'exito', perfil: recordado.perfil });
-
-    try {
-      const resultado = await window.spaceglider.buscarInvocadorPorRiotId(
-        recordado.riotId,
-      );
-      if (resultado.ok) {
-        const invocadorActualizado = {
-          riotId: recordado.riotId,
-          perfil: resultado.perfil,
-        };
-        guardarInvocadorRecordado(invocadorActualizado);
-        setInvocadorRecordado(invocadorActualizado);
-        setEstado({ tipo: 'exito', perfil: resultado.perfil });
-      }
-    } catch {
-      // Si el refresco falla, se mantiene el perfil guardado.
-    }
-  }
+  const [mostrarSelectorPerfil, setMostrarSelectorPerfil] = useState(false);
+  const [riotIdParaFijar, setRiotIdParaFijar] = useState('');
+  const [errorAlFijar, setErrorAlFijar] = useState('');
+  const [buscandoPerfilParaFijar, setBuscandoPerfilParaFijar] = useState(false);
+  const solicitudesPrincipal = useRef(0);
+  const solicitudPerfilFijado = useRef(0);
 
   useEffect(() => {
-    void cargarPerfilRecordado();
+    if (!perfilFijado) return;
+
+    let componenteActivo = true;
+    const numeroSolicitud = ++solicitudPerfilFijado.current;
+    void window.spaceglider
+      .buscarInvocadorPorRiotId(perfilFijado.riotId)
+      .then((resultado) => {
+        if (
+          !componenteActivo ||
+          numeroSolicitud !== solicitudPerfilFijado.current ||
+          !resultado.ok
+        ) {
+          return;
+        }
+
+        const perfilActualizado = {
+          riotId: perfilFijado.riotId,
+          perfil: resultado.perfil,
+        };
+        guardarPerfilFijado(perfilActualizado);
+        setPerfilFijado(perfilActualizado);
+        setEstado((estadoActual) =>
+          estadoActual.tipo === 'exito' &&
+          estadoActual.perfil.gameName === perfilFijado.perfil.gameName &&
+          estadoActual.perfil.tagLine === perfilFijado.perfil.tagLine
+            ? { tipo: 'exito', perfil: resultado.perfil }
+            : estadoActual,
+        );
+      })
+      .catch(() => {
+        // Si el refresco falla, se mantiene el perfil guardado.
+      });
+
+    return () => {
+      componenteActivo = false;
+    };
   }, []);
 
-  async function manejarBusqueda(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    const riotIdNormalizado = riotId.trim();
+  function normalizarRiotId(valor: string): string | null {
+    const riotIdNormalizado = valor.trim();
     const separador = riotIdNormalizado.indexOf('#');
-
     if (
       separador <= 0 ||
       separador !== riotIdNormalizado.lastIndexOf('#') ||
       separador === riotIdNormalizado.length - 1
     ) {
-      setEstado({
-        tipo: 'error',
-        origen: 'validacion',
-        mensaje: 'Ingresá el Riot ID con el formato gameName#tagLine.',
-      });
-      return;
+      return null;
     }
 
     const gameName = riotIdNormalizado.slice(0, separador).trim();
     const tagLine = riotIdNormalizado.slice(separador + 1).trim();
+    return gameName && tagLine ? `${gameName}#${tagLine}` : null;
+  }
 
-    if (!gameName || !tagLine) {
-      setEstado({
-        tipo: 'error',
-        origen: 'validacion',
-        mensaje: 'El nombre y la etiqueta deben tener contenido.',
-      });
-      return;
-    }
+  function crearResumen(
+    riotIdBuscado: string,
+    perfil: PerfilInvocador,
+  ): InvocadorGuardado {
+    return {
+      riotId: riotIdBuscado,
+      gameName: perfil.gameName,
+      tagLine: perfil.tagLine,
+      profileIconId: perfil.profileIconId,
+    };
+  }
 
+  function actualizarFavoritos(invocador: InvocadorGuardado): void {
+    const clave = invocador.riotId.toLocaleLowerCase('es-AR');
+    const yaEsFavorito = favoritos.some(
+      (favorito) => favorito.riotId.toLocaleLowerCase('es-AR') === clave,
+    );
+    const nuevosFavoritos = yaEsFavorito
+      ? favoritos.filter(
+          (favorito) => favorito.riotId.toLocaleLowerCase('es-AR') !== clave,
+        )
+      : [
+          invocador,
+          ...favoritos.filter(
+            (favorito) => favorito.riotId.toLocaleLowerCase('es-AR') !== clave,
+          ),
+        ].slice(0, 20);
+    setFavoritos(nuevosFavoritos);
+    guardarFavoritos(nuevosFavoritos);
+  }
+
+  function alternarFavoritoActual(perfil: PerfilInvocador): void {
+    actualizarFavoritos(
+      crearResumen(`${perfil.gameName}#${perfil.tagLine}`, perfil),
+    );
+  }
+
+  function alternarPerfilFijado(perfil: PerfilInvocador): void {
+    solicitudPerfilFijado.current += 1;
+    const riotIdPerfil = `${perfil.gameName}#${perfil.tagLine}`;
+    const esElPerfilFijado =
+      perfilFijado?.riotId.toLocaleLowerCase('es-AR') ===
+      riotIdPerfil.toLocaleLowerCase('es-AR');
+    const nuevoPerfilFijado = esElPerfilFijado
+      ? null
+      : { riotId: riotIdPerfil, perfil };
+    guardarPerfilFijado(nuevoPerfilFijado);
+    setPerfilFijado(nuevoPerfilFijado);
+  }
+
+  function guardarReciente(
+    riotIdBuscado: string,
+    perfil: PerfilInvocador,
+  ): void {
+    const resumen: InvocadorReciente = {
+      ...crearResumen(riotIdBuscado, perfil),
+      fecha: Date.now(),
+    };
+    const clave = riotIdBuscado.toLocaleLowerCase('es-AR');
+    const nuevosRecientes = [
+      resumen,
+      ...recientes.filter(
+        (reciente) => reciente.riotId.toLocaleLowerCase('es-AR') !== clave,
+      ),
+    ].slice(0, 8);
+    setRecientes(nuevosRecientes);
+    guardarRecientes(nuevosRecientes);
+  }
+
+  async function buscarPerfilGuardado(riotIdBuscado: string): Promise<void> {
+    const riotIdNormalizado = normalizarRiotId(riotIdBuscado);
+    if (!riotIdNormalizado) return;
+
+    const numeroSolicitud = ++solicitudesPrincipal.current;
+    setRiotId(riotIdNormalizado);
     setEstado({ tipo: 'cargando' });
-
     try {
-      const resultado = await window.spaceglider.buscarInvocadorPorRiotId(
-        `${gameName}#${tagLine}`,
-      );
-
+      const resultado =
+        await window.spaceglider.buscarInvocadorPorRiotId(riotIdNormalizado);
+      if (numeroSolicitud !== solicitudesPrincipal.current) return;
       if (resultado.ok) {
-        const invocador = {
-          riotId: `${gameName}#${tagLine}`,
-          perfil: resultado.perfil,
-        };
-        restauracionIntentada.current = false;
         setColaSeleccionada(colaConMayorElo(resultado.perfil));
-        guardarInvocadorRecordado(invocador);
-        setInvocadorRecordado(invocador);
         setEstado({ tipo: 'exito', perfil: resultado.perfil });
       } else {
         setEstado({
@@ -572,6 +781,87 @@ export function Aplicacion(): JSX.Element {
         });
       }
     } catch {
+      if (numeroSolicitud !== solicitudesPrincipal.current) return;
+      setEstado({
+        tipo: 'error',
+        origen: 'busqueda',
+        mensaje:
+          'No se pudo completar la búsqueda. Revisá tu conexión e intentá de nuevo.',
+      });
+    }
+  }
+
+  async function fijarPerfilDesdeSidebar(
+    evento: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
+    evento.preventDefault();
+    const riotIdNormalizado = normalizarRiotId(riotIdParaFijar);
+    if (!riotIdNormalizado) {
+      setErrorAlFijar('Ingresá el Riot ID con el formato nombre#etiqueta.');
+      return;
+    }
+
+    setErrorAlFijar('');
+    solicitudPerfilFijado.current += 1;
+    setBuscandoPerfilParaFijar(true);
+    try {
+      const resultado =
+        await window.spaceglider.buscarInvocadorPorRiotId(riotIdNormalizado);
+      if (resultado.ok) {
+        const nuevoPerfilFijado = {
+          riotId: riotIdNormalizado,
+          perfil: resultado.perfil,
+        };
+        guardarPerfilFijado(nuevoPerfilFijado);
+        setPerfilFijado(nuevoPerfilFijado);
+        setMostrarSelectorPerfil(false);
+        setRiotIdParaFijar('');
+      } else {
+        setErrorAlFijar(formatearError(resultado.codigo, resultado.mensaje));
+      }
+    } catch {
+      setErrorAlFijar(
+        'No se pudo completar la búsqueda. Revisá tu conexión e intentá de nuevo.',
+      );
+    } finally {
+      setBuscandoPerfilParaFijar(false);
+    }
+  }
+
+  async function manejarBusqueda(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const riotIdNormalizado = normalizarRiotId(riotId);
+    if (!riotIdNormalizado) {
+      setEstado({
+        tipo: 'error',
+        origen: 'validacion',
+        mensaje: 'Ingresá el Riot ID con el formato gameName#tagLine.',
+      });
+      return;
+    }
+
+    const numeroSolicitud = ++solicitudesPrincipal.current;
+    setEstado({ tipo: 'cargando' });
+
+    try {
+      const resultado =
+        await window.spaceglider.buscarInvocadorPorRiotId(riotIdNormalizado);
+
+      if (resultado.ok) {
+        if (numeroSolicitud !== solicitudesPrincipal.current) return;
+        guardarReciente(riotIdNormalizado, resultado.perfil);
+        setColaSeleccionada(colaConMayorElo(resultado.perfil));
+        setEstado({ tipo: 'exito', perfil: resultado.perfil });
+      } else {
+        if (numeroSolicitud !== solicitudesPrincipal.current) return;
+        setEstado({
+          tipo: 'error',
+          origen: 'busqueda',
+          mensaje: formatearError(resultado.codigo, resultado.mensaje),
+        });
+      }
+    } catch {
+      if (numeroSolicitud !== solicitudesPrincipal.current) return;
       setEstado({
         tipo: 'error',
         origen: 'busqueda',
@@ -583,26 +873,30 @@ export function Aplicacion(): JSX.Element {
 
   const estaCargando = estado.tipo === 'cargando';
   const hayError = estado.tipo === 'error';
-  const perfilActual =
-    estado.tipo === 'exito' ? estado.perfil : invocadorRecordado?.perfil;
-  const colaActual =
-    perfilActual &&
-    colasDisponibles(perfilActual).some(
-      (rango) => rango.queueType === colaSeleccionada,
-    )
-      ? colaSeleccionada
-      : perfilActual
-        ? colaConMayorElo(perfilActual)
-        : '';
-  const rangoActual = perfilActual?.rangos.find(
-    (rango) => rango.queueType === colaActual,
+  const perfilActual = estado.tipo === 'exito' ? estado.perfil : null;
+  const riotIdActual = perfilActual
+    ? `${perfilActual.gameName}#${perfilActual.tagLine}`
+    : '';
+  const esFavoritoActual = favoritos.some(
+    (favorito) =>
+      favorito.riotId.toLocaleLowerCase('es-AR') ===
+      riotIdActual.toLocaleLowerCase('es-AR'),
   );
+  const estaFijadoActual =
+    !!perfilActual &&
+    perfilFijado?.riotId.toLocaleLowerCase('es-AR') ===
+      riotIdActual.toLocaleLowerCase('es-AR');
 
   function cambiarSeccion(nuevaSeccion: 'perfil' | 'historial'): void {
     setSeccion(nuevaSeccion);
-    if (nuevaSeccion === 'perfil' && estado.tipo !== 'exito') {
-      void cargarPerfilRecordado();
-    }
+  }
+
+  function mostrarPerfilFijado(): void {
+    if (!perfilFijado) return;
+    solicitudesPrincipal.current += 1;
+    setColaSeleccionada(colaConMayorElo(perfilFijado.perfil));
+    setEstado({ tipo: 'exito', perfil: perfilFijado.perfil });
+    setSeccion('perfil');
   }
 
   function alternarSidebar(): void {
@@ -645,41 +939,108 @@ export function Aplicacion(): JSX.Element {
               <path d="M3 5h14M3 10h14M3 15h14" />
             </svg>
           </button>
-          {sidebarExpandida && (
-            <button
-              className="sidebar__invocador"
-              type="button"
-              onClick={() => cambiarSeccion('perfil')}
-              aria-label={
-                perfilActual
-                  ? `Abrir el perfil de ${perfilActual.gameName}#${perfilActual.tagLine}`
-                  : 'Ir a Perfil'
-              }
-            >
-              {perfilActual ? (
-                <>
+          {sidebarExpandida &&
+            (perfilFijado ? (
+              <div className="sidebar__fijado">
+                <button
+                  className="sidebar__invocador"
+                  type="button"
+                  onClick={mostrarPerfilFijado}
+                  aria-label={`Mostrar el perfil fijado de ${perfilFijado.perfil.gameName}#${perfilFijado.perfil.tagLine}`}
+                >
                   <IconoPerfil
-                    key={perfilActual.profileIconId}
-                    profileIconId={perfilActual.profileIconId}
-                    gameName={perfilActual.gameName}
+                    key={perfilFijado.perfil.profileIconId}
+                    profileIconId={perfilFijado.perfil.profileIconId}
+                    gameName={perfilFijado.perfil.gameName}
                     claseMarco={`sidebar__icono ${claseMarcoDeRango(
-                      rangoActual?.tier,
+                      perfilFijado.perfil.rangos.find(
+                        (rango) =>
+                          rango.queueType ===
+                          colaConMayorElo(perfilFijado.perfil),
+                      )?.tier,
                     )}`}
                   />
                   <span className="sidebar__invocador-texto">
                     <strong>
-                      {perfilActual.gameName}#{perfilActual.tagLine}
+                      {perfilFijado.perfil.gameName}#
+                      {perfilFijado.perfil.tagLine}
                     </strong>
-                    <span>Nivel {perfilActual.summonerLevel}</span>
+                    <span>Nivel {perfilFijado.perfil.summonerLevel}</span>
                   </span>
-                </>
-              ) : (
+                </button>
+                <button
+                  className="sidebar__cambiar"
+                  type="button"
+                  onClick={() =>
+                    setMostrarSelectorPerfil((mostrar) => !mostrar)
+                  }
+                  aria-expanded={mostrarSelectorPerfil}
+                  aria-controls="formulario-perfil-fijado"
+                >
+                  {mostrarSelectorPerfil ? 'Cancelar' : 'Cambiar perfil'}
+                </button>
+              </div>
+            ) : (
+              <div className="sidebar__sin-fijar">
                 <span className="sidebar__invocador-vacio">
-                  <strong>Sin invocador</strong>
-                  <span>Busca tu Riot ID</span>
+                  <strong>Sin perfil fijado</strong>
+                  <span>Elegí tu invocador</span>
                 </span>
+                <button
+                  className="sidebar__elegir"
+                  type="button"
+                  onClick={() =>
+                    setMostrarSelectorPerfil((mostrar) => !mostrar)
+                  }
+                  aria-expanded={mostrarSelectorPerfil}
+                  aria-controls="formulario-perfil-fijado"
+                >
+                  Elegir mi perfil
+                </button>
+              </div>
+            ))}
+          {sidebarExpandida && mostrarSelectorPerfil && (
+            <form
+              className="sidebar__formulario"
+              id="formulario-perfil-fijado"
+              onSubmit={fijarPerfilDesdeSidebar}
+              noValidate
+            >
+              <label htmlFor="riot-id-fijado">Tu Riot ID</label>
+              <input
+                id="riot-id-fijado"
+                type="text"
+                value={riotIdParaFijar}
+                onChange={(evento) => {
+                  setRiotIdParaFijar(evento.target.value);
+                  setErrorAlFijar('');
+                }}
+                placeholder="Nombre#Etiqueta"
+                autoComplete="off"
+                maxLength={64}
+                aria-describedby={
+                  errorAlFijar ? 'error-perfil-fijado' : undefined
+                }
+                aria-invalid={errorAlFijar ? 'true' : undefined}
+                disabled={buscandoPerfilParaFijar}
+              />
+              <button
+                className="sidebar__elegir"
+                type="submit"
+                disabled={buscandoPerfilParaFijar}
+              >
+                {buscandoPerfilParaFijar ? 'Buscando…' : 'Confirmar'}
+              </button>
+              {errorAlFijar && (
+                <p
+                  className="sidebar__error"
+                  id="error-perfil-fijado"
+                  role="alert"
+                >
+                  {errorAlFijar}
+                </p>
               )}
-            </button>
+            </form>
           )}
         </div>
 
@@ -719,6 +1080,39 @@ export function Aplicacion(): JSX.Element {
             {sidebarExpandida && <span>Historial</span>}
           </button>
         </nav>
+        {sidebarExpandida && favoritos.length > 0 && (
+          <section
+            className="sidebar__favoritos"
+            aria-labelledby="titulo-favoritos"
+          >
+            <h2 id="titulo-favoritos">Favoritos</h2>
+            <ul className="sidebar__favoritos-lista">
+              {favoritos.map((favorito) => (
+                <li key={favorito.riotId}>
+                  <button
+                    className="sidebar__favorito"
+                    type="button"
+                    onClick={() => {
+                      setSeccion('perfil');
+                      void buscarPerfilGuardado(favorito.riotId);
+                    }}
+                    aria-label={`Buscar ${favorito.gameName}#${favorito.tagLine}`}
+                  >
+                    <IconoPerfil
+                      key={favorito.profileIconId}
+                      profileIconId={favorito.profileIconId}
+                      gameName={favorito.gameName}
+                      claseMarco="sidebar__icono marco--neutro"
+                    />
+                    <span>
+                      {favorito.gameName}#{favorito.tagLine}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </aside>
 
       <div className="zona-principal">
@@ -799,6 +1193,26 @@ export function Aplicacion(): JSX.Element {
                 </p>
               </form>
 
+              {recientes.length > 0 && (
+                <section className="recientes" aria-label="Búsquedas recientes">
+                  <h2>Recientes</h2>
+                  <div className="recientes__lista">
+                    {recientes.map((reciente) => (
+                      <button
+                        className="recientes__chip"
+                        key={reciente.riotId}
+                        type="button"
+                        onClick={() =>
+                          void buscarPerfilGuardado(reciente.riotId)
+                        }
+                      >
+                        {reciente.gameName}#{reciente.tagLine}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              )}
+
               {hayError && (
                 <p
                   className="mensaje mensaje--error"
@@ -823,8 +1237,14 @@ export function Aplicacion(): JSX.Element {
                 <TarjetaPerfil
                   key={`${estado.perfil.gameName}#${estado.perfil.tagLine}`}
                   perfil={estado.perfil}
+                  favorito={esFavoritoActual}
+                  fijado={estaFijadoActual}
                   colaSeleccionada={colaSeleccionada}
                   onCambiarCola={setColaSeleccionada}
+                  onAlternarFavorito={() =>
+                    alternarFavoritoActual(estado.perfil)
+                  }
+                  onAlternarFijado={() => alternarPerfilFijado(estado.perfil)}
                 />
               ) : (
                 !hayError &&

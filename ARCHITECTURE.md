@@ -36,6 +36,41 @@ la plataforma LA2. LEAGUE-V4 se consulta por `puuid`.
 Los DTO de Riot se verifican al recibirlos mediante validaciones TypeScript; no
 se usa Zod en este hito. La clave va en el encabezado `X-Riot-Token`.
 
+## Historial de partidas
+
+Con el `puuid` del perfil se consultan las últimas partidas con MATCH-V5:
+
+1. `GET https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?start={inicio}&count={cantidad}`
+   → ids de partida, de la más reciente a la más antigua.
+2. `GET https://americas.api.riotgames.com/lol/match/v5/matches/{matchId}`
+   → una consulta por partida; una partida fallida no cancela las demás.
+
+Cada partida se resume con campeón, resultado, KDA, duración, cola y fecha. Los
+ids se cachean por índice durante 5 minutos y solo se piden los tramos que
+faltan; los resúmenes duran 10 minutos. El historial se pide de a 10 partidas
+(o menos) usando `inicio` y `cantidad`.
+
+## Recursos visuales
+
+Los iconos de perfil vienen de Data Dragon: la versión vigente se cachea 24 horas
+en el renderer y los iconos se piden a `/cdn/{version}/img/profileicon/{id}.png`.
+Las chapas de rango vienen de CommunityDragon (ruta `ranked-emblem`) y llevan
+`onError` para ocultarse si no cargan. Ambas cosas son cosméticas: un fallo de
+red no impide mostrar el perfil.
+
+## Estado del renderer
+
+El proceso principal no guarda preferencias de interfaz. El renderer usa
+`localStorage` con estas claves, validadas al leer y con límites propios:
+
+- `spaceglider-perfil-fijado`: el invocador elegido explícitamente para la barra
+  lateral (Riot ID y último perfil conocido). Es independiente del buscador
+  principal; al abrir la app se muestra lo guardado y se refresca en segundo
+  plano.
+- `spaceglider-favoritos`: hasta 20 invocadores guardados con la estrella.
+- `spaceglider-recientes`: hasta 8 búsquedas exitosas del buscador principal.
+- `spaceglider-sidebar-expandida`: si la barra lateral está abierta.
+
 ## Caché y límites
 
 Los perfiles encontrados se guardan en memoria y en `riot-cache.json` dentro de
@@ -70,9 +105,9 @@ Verbos canónicos:
 
 Todo verbo fuera de esta lista requiere justificación.
 
-## Fuera del Hito 1
+## Fuera del Hito 2
 
-- Historial de partidas, maestrías, filtros y más regiones.
+- Filtros del historial, maestrías y más regiones.
 - Zod: Fase 2 / opcional; no se instala ni se usa en el MVP.
 - SQLite: Fase 2.
 - Integración con LCU y Champion Select: futuro, no implementada.

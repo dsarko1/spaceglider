@@ -14,3 +14,11 @@
 - Añadidas caché en memoria y JSON, expiración de 10 minutos y reintentos HTTP 429.
 - Documentados la configuración local de la clave y los límites de Riot API.
 - El perfil básico se conserva cuando Riot deniega la consulta de clasificatorias.
+
+## Hito 2
+
+- Corregida la búsqueda con LEAGUE-V4 por puuid; SUMMONER-V4 ya no devuelve id.
+- Añadidos los iconos de perfil con Data Dragon y la navegación Perfil/Historial.
+- Integrado MATCH-V5 para las últimas partidas, con cachés y paginación por inicio y cantidad.
+- Añadidas las chapas de rango de CommunityDragon en la tarjeta y en los chips.
+- Barra lateral colapsable con perfil fijado, favoritos y búsquedas recientes en localStorage.
