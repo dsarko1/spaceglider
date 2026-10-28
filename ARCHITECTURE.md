@@ -25,14 +25,13 @@ La búsqueda por Riot ID ejecuta estas consultas en orden:
    → `puuid`.
 2. `puuid` → SUMMONER-V4
    `GET https://la2.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/{puuid}`
-   → `summonerId`, nivel e icono.
-3. `summonerId` → LEAGUE-V4
-   `GET https://la2.api.riotgames.com/lol/league/v4/entries/by-summoner/{summonerId}`
+   → nivel e icono.
+3. `puuid` → LEAGUE-V4
+   `GET https://la2.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}`
    → rango y `leaguePoints`.
 
 ACCOUNT-V1 usa el enrutamiento regional Americas. SUMMONER-V4 y LEAGUE-V4 usan
-la plataforma LA2. La consulta LEAGUE-V4 se hace por `summonerId`, no por
-`puuid`.
+la plataforma LA2. LEAGUE-V4 se consulta por `puuid`.
 
 Los DTO de Riot se verifican al recibirlos mediante validaciones TypeScript; no
 se usa Zod en este hito. La clave va en el encabezado `X-Riot-Token`.
@@ -57,7 +56,7 @@ sin clasificar.
 El código propio usa español para nombres de archivos, funciones, variables y
 constantes. Los tipos y campos que representan datos oficiales de Riot conservan
 los nombres documentados en inglés (por ejemplo, `AccountDTO`, `SummonerDTO`,
-`LeagueEntryDTO`, `puuid`, `summonerId`, `leaguePoints` y `queueType`).
+`LeagueEntryDTO`, `puuid`, `leaguePoints` y `queueType`).
 
 Verbos canónicos:
 

@@ -46,7 +46,6 @@ interface AccountDTO {
 }
 
 interface SummonerDTO {
-  id: string;
   summonerLevel: number;
   profileIconId: number;
 }
@@ -123,14 +122,12 @@ function leerCuenta(valor: unknown): AccountDTO | undefined {
 function leerInvocador(valor: unknown): SummonerDTO | undefined {
   if (
     !esObjeto(valor) ||
-    !texto(valor.id) ||
     !numero(valor.summonerLevel) ||
     !numero(valor.profileIconId)
   ) {
     return undefined;
   }
   return {
-    id: valor.id,
     summonerLevel: valor.summonerLevel,
     profileIconId: valor.profileIconId,
   };
@@ -367,7 +364,7 @@ export async function buscarInvocadorPorRiotId(
     let rangosDisponibles = true;
     try {
       const rangosSinProcesar = await pedirConReintentos(
-        `${raizLA2}/lol/league/v4/entries/by-summoner/${encodeURIComponent(invocador.id)}`,
+        `${raizLA2}/lol/league/v4/entries/by-puuid/${encodeURIComponent(cuenta.puuid)}`,
         clave,
         0,
       );
