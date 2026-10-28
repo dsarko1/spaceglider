@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'node:path';
 import { buscarInvocadorPorRiotId } from './riot';
 import { obtenerHistorialInvocador } from './historial';
+import { obtenerMaestriasInvocador } from './maestrias';
 
 ipcMain.handle('riot:buscar-invocador', (_evento, riotId: unknown) =>
   buscarInvocadorPorRiotId(riotId),
@@ -15,6 +16,10 @@ ipcMain.handle(
       inicio === undefined ? undefined : (inicio as number),
       cantidad === undefined ? undefined : (cantidad as number),
     ),
+);
+
+ipcMain.handle('maestrias:buscar', (_evento, riotId: unknown) =>
+  obtenerMaestriasInvocador(riotId),
 );
 
 function crearVentana(): void {

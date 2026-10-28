@@ -4,6 +4,7 @@ import type {
   PerfilInvocador,
 } from '../compartido/contratos';
 import { Historial } from './historial';
+import { Maestrias } from './maestrias';
 
 type EstadoBusqueda =
   | { tipo: 'inicial' }
@@ -628,7 +629,9 @@ export function Aplicacion(): JSX.Element {
       ? { tipo: 'exito', perfil: perfilFijado.perfil }
       : { tipo: 'inicial' },
   );
-  const [seccion, setSeccion] = useState<'perfil' | 'historial'>('perfil');
+  const [seccion, setSeccion] = useState<'perfil' | 'historial' | 'maestrias'>(
+    'perfil',
+  );
   const [colaSeleccionada, setColaSeleccionada] = useState('');
   const [sidebarExpandida, setSidebarExpandida] =
     useState(leerSidebarExpandida);
@@ -904,9 +907,11 @@ export function Aplicacion(): JSX.Element {
     !!perfilActual &&
     perfilFijado?.riotId.toLocaleLowerCase('es-AR') ===
       riotIdActual.toLocaleLowerCase('es-AR');
-  const perfilParaHistorial = perfilActivo ?? perfilFijado;
+  const perfilParaVista = perfilActivo ?? perfilFijado;
 
-  function cambiarSeccion(nuevaSeccion: 'perfil' | 'historial'): void {
+  function cambiarSeccion(
+    nuevaSeccion: 'perfil' | 'historial' | 'maestrias',
+  ): void {
     setSeccion(nuevaSeccion);
   }
 
@@ -1099,6 +1104,21 @@ export function Aplicacion(): JSX.Element {
             </svg>
             {sidebarExpandida && <span>Historial</span>}
           </button>
+          <button
+            className="sidebar__boton"
+            type="button"
+            aria-label="Maestrías"
+            aria-current={seccion === 'maestrias' ? 'page' : undefined}
+            aria-controls="contenido-principal"
+            title={sidebarExpandida ? undefined : 'Maestrías'}
+            onClick={() => cambiarSeccion('maestrias')}
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <circle cx="10" cy="8" r="4.5" />
+              <path d="M7 11.5 5.5 17l4.5-2 4.5 2L13 11.5" />
+            </svg>
+            {sidebarExpandida && <span>Maestrías</span>}
+          </button>
         </nav>
         {sidebarExpandida && favoritos.length > 0 && (
           <section
@@ -1279,13 +1299,24 @@ export function Aplicacion(): JSX.Element {
                 )
               )}
             </section>
-          ) : (
+          ) : seccion === 'historial' ? (
             <Historial
-              key={`historial-${perfilParaHistorial?.riotId ?? 'sin-perfil'}`}
-              riotId={perfilParaHistorial?.riotId ?? null}
+              key={`historial-${perfilParaVista?.riotId ?? 'sin-perfil'}`}
+              riotId={perfilParaVista?.riotId ?? null}
               nombreInvocador={
-                perfilParaHistorial
-                  ? `${perfilParaHistorial.perfil.gameName}#${perfilParaHistorial.perfil.tagLine}`
+                perfilParaVista
+                  ? `${perfilParaVista.perfil.gameName}#${perfilParaVista.perfil.tagLine}`
+                  : null
+              }
+              formatearError={formatearError}
+            />
+          ) : (
+            <Maestrias
+              key={`maestrias-${perfilParaVista?.riotId ?? 'sin-perfil'}`}
+              riotId={perfilParaVista?.riotId ?? null}
+              nombreInvocador={
+                perfilParaVista
+                  ? `${perfilParaVista.perfil.gameName}#${perfilParaVista.perfil.tagLine}`
                   : null
               }
               formatearError={formatearError}

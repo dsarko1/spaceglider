@@ -4,6 +4,11 @@ import type {
   ResultadoHistorialInvocador,
 } from '../compartido/contratos';
 import { leerClave, pedirConReintentos } from './riot-cliente';
+import {
+  buscarCampeon,
+  obtenerDatosCampeones,
+  urlIconoCampeon,
+} from './champions';
 
 const MENSAJES: Record<CodigoErrorBusqueda, string> = {
   API_KEY_FALTANTE: 'Falta configurar RIOT_API_KEY en el archivo .env.',
@@ -77,6 +82,7 @@ function leerResumen(
   if (
     !esObjeto(participante) ||
     !texto(participante.championName) ||
+    !numero(participante.championId) ||
     typeof participante.win !== 'boolean' ||
     !numero(participante.kills) ||
     !numero(participante.deaths) ||
@@ -90,6 +96,7 @@ function leerResumen(
   return {
     matchId: metadata.matchId,
     campeon: participante.championName,
+    championId: participante.championId,
     resultado: participante.win ? 'victoria' : 'derrota',
     asesinatos: participante.kills,
     muertes: participante.deaths,
@@ -211,6 +218,15 @@ export async function obtenerHistorialInvocador(
       entradaIds.idsPorIndice.get(inicio + posicion),
     ).filter((matchId): matchId is string => matchId !== undefined);
 
+    let datosCampeones:
+      | Awaited<ReturnType<typeof obtenerDatosCampeones>>
+      | undefined;
+    try {
+      datosCampeones = await obtenerDatosCampeones();
+    } catch {
+      datosCampeones = undefined;
+    }
+
     const partidas: ResumenPartida[] = [];
     for (const matchId of ids) {
       const clavePartida = `${cuenta.puuid}:${matchId}`;
@@ -232,11 +248,25 @@ export async function obtenerHistorialInvocador(
           cuenta.puuid,
         );
         if (!resumen) continue;
+        const campeon = datosCampeones
+          ? buscarCampeon(datosCampeones.campeones, resumen.campeon)
+          : undefined;
+        const resumenConCampeon =
+          campeon && datosCampeones
+            ? {
+                ...resumen,
+                championId: campeon.championId,
+                imagenCampeon: urlIconoCampeon(
+                  datosCampeones.version,
+                  campeon.identificador,
+                ),
+              }
+            : resumen;
         guardarLimitado(cachePartidas, clavePartida, {
           guardadoEn: Date.now(),
-          resumen,
+          resumen: resumenConCampeon,
         });
-        partidas.push(resumen);
+        partidas.push(resumenConCampeon);
       } catch {
         continue;
       }

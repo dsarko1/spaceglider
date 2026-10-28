@@ -285,6 +285,10 @@ input {
   transform: translateY(50px);
 }
 
+.sidebar[data-seccion='maestrias'] .sidebar__navegacion::before {
+  transform: translateY(100px);
+}
+
 .sidebar__boton {
   display: flex;
   width: 46px;
@@ -480,7 +484,8 @@ input {
 }
 
 .historial__filtro,
-.historial__boton {
+.historial__boton,
+.maestrias__boton {
   min-height: 34px;
   padding: 0 11px;
   border: 1px solid var(--borde);
@@ -499,13 +504,15 @@ input {
 }
 
 .historial__filtro:hover,
-.historial__boton:hover:not(:disabled) {
+.historial__boton:hover:not(:disabled),
+.maestrias__boton:hover:not(:disabled) {
   border-color: rgb(226 175 57 / 40%);
   color: var(--acento);
 }
 
 .historial__filtro:focus-visible,
-.historial__boton:focus-visible {
+.historial__boton:focus-visible,
+.maestrias__boton:focus-visible {
   outline: 3px solid rgb(226 175 57 / 40%);
   outline-offset: 2px;
 }
@@ -563,13 +570,35 @@ input {
 .historial__partida {
   display: grid;
   min-width: 0;
-  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-columns: 78px 32px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   padding: 11px 14px;
   border: 1px solid var(--borde);
   border-radius: 12px;
   background: rgb(9 23 36 / 28%);
+}
+
+.historial__icono-campeon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--borde);
+  border-radius: 50%;
+  background: var(--superficie-elevada);
+  color: #d2dce4;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.historial__icono-campeon img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
 }
 
 .historial__resultado {
@@ -626,9 +655,145 @@ input {
   margin: 14px auto 0;
 }
 
-.historial__boton:disabled {
+.historial__boton:disabled,
+.maestrias__boton:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+.maestrias__vista {
+  width: min(100%, 840px);
+  margin: auto 0;
+  padding: 38px 0;
+}
+
+.maestrias__vista h1 {
+  overflow-wrap: anywhere;
+  font-size: clamp(32px, 5vw, 48px);
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+}
+
+.maestrias__invocador {
+  margin: 10px 0 0;
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+.maestrias__contenido {
+  min-height: 80px;
+  margin-top: 16px;
+}
+
+.maestrias__estado,
+.maestrias__vacio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 3%);
+  color: var(--texto-secundario);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.maestrias__estado--error {
+  flex-wrap: wrap;
+  border-color: rgb(238 129 121 / 35%);
+  background: rgb(238 129 121 / 8%);
+  color: #ffc2bc;
+}
+
+.maestrias__estado--error p {
+  flex: 1 1 200px;
+  margin: 0;
+}
+
+.maestrias__spinner {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border: 2px solid rgb(255 255 255 / 18%);
+  border-top-color: var(--acento);
+  border-radius: 50%;
+  animation: girar 700ms linear infinite;
+}
+
+.maestrias__lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.maestrias__item {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: rgb(9 23 36 / 28%);
+}
+
+.maestrias__puesto {
+  color: var(--texto-secundario);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  text-align: center;
+}
+
+.maestrias__datos {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.maestrias__campeon {
+  overflow: hidden;
+  color: #f1f4f7;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.maestrias__puntos {
+  color: #d2dce4;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.maestrias__detalle {
+  color: var(--texto-secundario);
+  font-size: 10px;
+}
+
+.maestrias__nivel {
+  justify-self: end;
+  padding: 5px 9px;
+  border-radius: 7px;
+  background: rgb(226 175 57 / 9%);
+  color: var(--acento);
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.maestrias__nivel strong {
+  font-size: 12px;
+}
+
+.maestrias__nivel--prestigio {
+  border: 1px solid rgb(226 175 57 / 40%);
+  background: rgb(226 175 57 / 18%);
 }
 
 h1 {
@@ -1165,7 +1330,8 @@ h1 span {
   }
 
   .presentacion,
-  .historial__vista {
+  .historial__vista,
+  .maestrias__vista {
     padding-block: 30px;
   }
 }
@@ -1193,7 +1359,7 @@ h1 span {
   }
 
   .historial__partida {
-    grid-template-columns: 68px minmax(0, 1fr);
+    grid-template-columns: 68px 32px minmax(0, 1fr);
     gap: 9px;
     padding: 10px;
   }
@@ -1204,6 +1370,16 @@ h1 span {
   }
 
   .historial__vacio {
+    padding: 12px;
+  }
+
+  .maestrias__item {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .maestrias__vacio {
     padding: 12px;
   }
 

@@ -3,6 +3,7 @@ import type {
   CodigoErrorBusqueda,
   ResumenPartida,
 } from '../compartido/contratos';
+import { HistorialItem } from './componentes/HistorialItem';
 
 interface DatosHistorial {
   partidas: ResumenPartida[];
@@ -293,30 +294,13 @@ export function Historial({
         {!cargando && partidasFiltradas.length > 0 && (
           <ul className="historial__lista">
             {partidasFiltradas.map((partida) => (
-              <li className="historial__partida" key={partida.matchId}>
-                <span
-                  className={`historial__resultado historial__resultado--${partida.resultado}`}
-                >
-                  {partida.resultado === 'victoria' ? 'Victoria' : 'Derrota'}
-                </span>
-                <div className="historial__datos">
-                  <strong className="historial__campeon">
-                    {partida.campeon}
-                  </strong>
-                  <span
-                    className="historial__kda"
-                    aria-label={`KDA: ${partida.asesinatos} asesinatos, ${partida.muertes} muertes y ${partida.asistencias} asistencias`}
-                  >
-                    {partida.asesinatos} / {partida.muertes} /{' '}
-                    {partida.asistencias}
-                  </span>
-                  <span className="historial__detalle">
-                    {nombreDeCola(partida.queueId)} ·{' '}
-                    {duracionPartida(partida.duracionEnSegundos)} ·{' '}
-                    {fechaRelativa(partida.gameStartTimestamp)}
-                  </span>
-                </div>
-              </li>
+              <HistorialItem
+                key={partida.matchId}
+                partida={partida}
+                nombreCola={nombreDeCola(partida.queueId)}
+                duracion={duracionPartida(partida.duracionEnSegundos)}
+                fecha={fechaRelativa(partida.gameStartTimestamp)}
+              />
             ))}
           </ul>
         )}

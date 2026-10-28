@@ -34,6 +34,8 @@ export type ResultadoBusquedaInvocador =
 export interface ResumenPartida {
   matchId: string;
   campeon: string;
+  championId: number;
+  imagenCampeon?: string;
   resultado: 'victoria' | 'derrota';
   asesinatos: number;
   muertes: number;
@@ -47,6 +49,19 @@ export type ResultadoHistorialInvocador =
   | { ok: true; partidas: ResumenPartida[]; hayMas: boolean }
   | { ok: false; codigo: CodigoErrorBusqueda; mensaje: string };
 
+export interface MaestriaCampeon {
+  campeonId: number;
+  campeon: string;
+  nivel: number;
+  puntos: number;
+  ultimoJuego: number;
+  fichas: number;
+}
+
+export type ResultadoMaestriasInvocador =
+  | { ok: true; maestrias: MaestriaCampeon[] }
+  | { ok: false; codigo: CodigoErrorBusqueda; mensaje: string };
+
 export interface APIEnlaceSpaceglider {
   buscarInvocadorPorRiotId(riotId: string): Promise<ResultadoBusquedaInvocador>;
   buscarHistorialInvocador(
@@ -54,6 +69,9 @@ export interface APIEnlaceSpaceglider {
     inicio?: number,
     cantidad?: number,
   ): Promise<ResultadoHistorialInvocador>;
+  buscarMaestriasInvocador(
+    riotId: string,
+  ): Promise<ResultadoMaestriasInvocador>;
 }
 
 declare global {
