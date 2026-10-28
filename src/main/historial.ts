@@ -27,7 +27,6 @@ const MAX_ENTRADAS_CACHE = 100;
 type Objeto = Record<string, unknown>;
 type EntradaIds = {
   guardadoEn: number;
-  cantidadCubierta: number;
   idsPorIndice: Map<number, string>;
 };
 type EntradaPartida = { guardadoEn: number; resumen: ResumenPartida };
@@ -174,8 +173,9 @@ export async function obtenerHistorialInvocador(
       idsCacheados &&
       estaVigente(idsCacheados.guardadoEn, DURACION_CACHE_IDS_MS)
         ? idsCacheados
-        : { guardadoEn: 0, cantidadCubierta: 0, idsPorIndice: new Map() };
-    const fin = inicio + cantidad;
+        : { guardadoEn: 0, idsPorIndice: new Map() };
+    const finPagina = inicio + cantidad;
+    const fin = finPagina + 1;
     for (let indice = inicio; indice < fin;) {
       if (entradaIds.idsPorIndice.has(indice)) {
         indice += 1;
@@ -202,7 +202,6 @@ export async function obtenerHistorialInvocador(
       }
       entradaIds = {
         guardadoEn: Date.now(),
-        cantidadCubierta: entradaIds.idsPorIndice.size,
         idsPorIndice: entradaIds.idsPorIndice,
       };
       if (idsLeidos.length < cantidadFaltante) break;
@@ -242,7 +241,11 @@ export async function obtenerHistorialInvocador(
         continue;
       }
     }
-    return { ok: true, partidas };
+    return {
+      ok: true,
+      partidas,
+      hayMas: entradaIds.idsPorIndice.has(finPagina),
+    };
   } catch (errorRecibido) {
     return error(codigoError(errorRecibido));
   }

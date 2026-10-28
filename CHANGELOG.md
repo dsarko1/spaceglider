@@ -22,3 +22,4 @@
 - Integrado MATCH-V5 para las últimas partidas, con cachés y paginación por inicio y cantidad.
 - Añadidas las chapas de rango de CommunityDragon en la tarjeta y en los chips.
 - Barra lateral colapsable con perfil fijado, favoritos y búsquedas recientes en localStorage.
+- Vista de historial con filtros por cola y resultado, y botón para cargar más.

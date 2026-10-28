@@ -47,6 +47,10 @@ normalmente `%APPDATA%\Spaceglider\.env`).
 
 ## Alcance actual
 
-El historial de partidas, maestrías, filtros, SQLite y la integración con LCU
-no forman parte de este hito.
+La búsqueda de invocadores y el historial de partidas ya funcionan con la Riot
+API. El perfil muestra icono, nivel y clasificatorias; el historial lista las
+últimas partidas con filtros por cola y resultado, y permite cargar más. La
+barra lateral guarda un perfil fijado, favoritos y búsquedas recientes.
+
+Todavía no hay maestrías, imágenes de campeón, SQLite ni integración con LCU.
 La arquitectura acordada está en [ARCHITECTURE.md](ARCHITECTURE.md).

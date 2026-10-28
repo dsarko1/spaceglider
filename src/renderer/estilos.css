@@ -448,10 +448,187 @@ input {
   padding: 38px 0;
 }
 
-.historial {
-  width: min(100%, 700px);
+.historial__vista {
+  width: min(100%, 840px);
   margin: auto 0;
   padding: 38px 0;
+}
+
+.historial__vista h1 {
+  overflow-wrap: anywhere;
+  font-size: clamp(32px, 5vw, 48px);
+  letter-spacing: -0.05em;
+  line-height: 1.05;
+}
+
+.historial__invocador {
+  margin: 10px 0 0;
+  color: var(--texto-secundario);
+  font-size: 13px;
+}
+
+.historial__filtros {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.historial__filtro-grupo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.historial__filtro,
+.historial__boton {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--borde);
+  border-radius: 9px;
+  background: rgb(255 255 255 / 3%);
+  color: var(--texto-secundario);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.historial__filtro[aria-pressed='true'] {
+  border-color: rgb(226 175 57 / 45%);
+  background: rgb(226 175 57 / 9%);
+  color: var(--acento);
+}
+
+.historial__filtro:hover,
+.historial__boton:hover:not(:disabled) {
+  border-color: rgb(226 175 57 / 40%);
+  color: var(--acento);
+}
+
+.historial__filtro:focus-visible,
+.historial__boton:focus-visible {
+  outline: 3px solid rgb(226 175 57 / 40%);
+  outline-offset: 2px;
+}
+
+.historial__contenido {
+  min-height: 80px;
+  margin-top: 16px;
+}
+
+.historial__estado,
+.historial__vacio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 3%);
+  color: var(--texto-secundario);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.historial__estado--error {
+  flex-wrap: wrap;
+  border-color: rgb(238 129 121 / 35%);
+  background: rgb(238 129 121 / 8%);
+  color: #ffc2bc;
+}
+
+.historial__estado--error p {
+  flex: 1 1 200px;
+  margin: 0;
+}
+
+.historial__spinner {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  border: 2px solid rgb(255 255 255 / 18%);
+  border-top-color: var(--acento);
+  border-radius: 50%;
+  animation: girar 700ms linear infinite;
+}
+
+.historial__lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historial__partida {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 78px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: rgb(9 23 36 / 28%);
+}
+
+.historial__resultado {
+  justify-self: start;
+  padding: 5px 7px;
+  border-radius: 7px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.historial__resultado--victoria {
+  background: rgb(93 182 133 / 13%);
+  color: #9bd5b2;
+}
+
+.historial__resultado--derrota {
+  background: rgb(222 112 112 / 13%);
+  color: #e6a1a1;
+}
+
+.historial__datos {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(80px, 1fr) auto;
+  align-items: center;
+  gap: 3px 12px;
+}
+
+.historial__campeon {
+  overflow: hidden;
+  color: #f1f4f7;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.historial__kda {
+  color: #d2dce4;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.historial__detalle {
+  grid-column: 1 / -1;
+  color: var(--texto-secundario);
+  font-size: 10px;
+}
+
+.historial__cargar-mas {
+  display: block;
+  min-width: 128px;
+  margin: 14px auto 0;
+}
+
+.historial__boton:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 h1 {
@@ -957,42 +1134,6 @@ h1 span {
   line-height: 1.6;
 }
 
-.historial__vacio {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-top: 30px;
-  padding: 20px;
-  border: 1px solid var(--borde);
-  border-radius: 16px;
-  background: rgb(255 255 255 / 3%);
-}
-
-.historial__simbolo {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid rgb(226 175 57 / 30%);
-  border-radius: 10px;
-  color: var(--acento);
-  font-weight: 800;
-}
-
-.historial__vacio p {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  color: var(--texto-secundario);
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-.historial__vacio strong {
-  color: #f1f4f7;
-  font-size: 14px;
-}
 .pie {
   margin-top: 18px;
   color: rgb(214 225 234 / 45%);
@@ -1024,7 +1165,7 @@ h1 span {
   }
 
   .presentacion,
-  .historial {
+  .historial__vista {
     padding-block: 30px;
   }
 }
@@ -1051,8 +1192,19 @@ h1 span {
     height: 64px;
   }
 
+  .historial__partida {
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .historial__datos {
+    grid-template-columns: minmax(60px, 1fr) auto;
+    gap: 3px 8px;
+  }
+
   .historial__vacio {
-    padding: 16px;
+    padding: 12px;
   }
 
   .pie {

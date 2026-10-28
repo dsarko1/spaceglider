@@ -3,6 +3,7 @@ import type {
   CodigoErrorBusqueda,
   PerfilInvocador,
 } from '../compartido/contratos';
+import { Historial } from './historial';
 
 type EstadoBusqueda =
   | { tipo: 'inicial' }
@@ -616,6 +617,9 @@ function TarjetaPerfil({
 
 export function Aplicacion(): JSX.Element {
   const [perfilFijado, setPerfilFijado] = useState(leerPerfilFijado);
+  const [perfilActivo, setPerfilActivo] = useState<PerfilFijado | null>(
+    () => perfilFijado,
+  );
   const [favoritos, setFavoritos] = useState(leerFavoritos);
   const [recientes, setRecientes] = useState(leerRecientes);
   const [riotId, setRiotId] = useState('');
@@ -657,6 +661,12 @@ export function Aplicacion(): JSX.Element {
         };
         guardarPerfilFijado(perfilActualizado);
         setPerfilFijado(perfilActualizado);
+        setPerfilActivo((activo) =>
+          activo?.riotId.toLocaleLowerCase('es-AR') ===
+          perfilFijado.riotId.toLocaleLowerCase('es-AR')
+            ? perfilActualizado
+            : activo,
+        );
         setEstado((estadoActual) =>
           estadoActual.tipo === 'exito' &&
           estadoActual.perfil.gameName === perfilFijado.perfil.gameName &&
@@ -772,6 +782,10 @@ export function Aplicacion(): JSX.Element {
       if (numeroSolicitud !== solicitudesPrincipal.current) return;
       if (resultado.ok) {
         setColaSeleccionada(colaConMayorElo(resultado.perfil));
+        setPerfilActivo({
+          riotId: riotIdNormalizado,
+          perfil: resultado.perfil,
+        });
         setEstado({ tipo: 'exito', perfil: resultado.perfil });
       } else {
         setEstado({
@@ -851,6 +865,10 @@ export function Aplicacion(): JSX.Element {
         if (numeroSolicitud !== solicitudesPrincipal.current) return;
         guardarReciente(riotIdNormalizado, resultado.perfil);
         setColaSeleccionada(colaConMayorElo(resultado.perfil));
+        setPerfilActivo({
+          riotId: riotIdNormalizado,
+          perfil: resultado.perfil,
+        });
         setEstado({ tipo: 'exito', perfil: resultado.perfil });
       } else {
         if (numeroSolicitud !== solicitudesPrincipal.current) return;
@@ -886,6 +904,7 @@ export function Aplicacion(): JSX.Element {
     !!perfilActual &&
     perfilFijado?.riotId.toLocaleLowerCase('es-AR') ===
       riotIdActual.toLocaleLowerCase('es-AR');
+  const perfilParaHistorial = perfilActivo ?? perfilFijado;
 
   function cambiarSeccion(nuevaSeccion: 'perfil' | 'historial'): void {
     setSeccion(nuevaSeccion);
@@ -895,6 +914,7 @@ export function Aplicacion(): JSX.Element {
     if (!perfilFijado) return;
     solicitudesPrincipal.current += 1;
     setColaSeleccionada(colaConMayorElo(perfilFijado.perfil));
+    setPerfilActivo(perfilFijado);
     setEstado({ tipo: 'exito', perfil: perfilFijado.perfil });
     setSeccion('perfil');
   }
@@ -1260,32 +1280,16 @@ export function Aplicacion(): JSX.Element {
               )}
             </section>
           ) : (
-            <section
-              className="historial panel"
-              aria-labelledby="titulo-principal"
-              key="historial"
-            >
-              <h1 id="titulo-principal">Historial de partidas</h1>
-              <p className="descripcion">
-                Tus partidas recientes van a aparecer en esta sección.
-              </p>
-              <div
-                className="historial__vacio"
-                role="status"
-                aria-live="polite"
-              >
-                <span className="historial__simbolo" aria-hidden="true">
-                  —
-                </span>
-                <p>
-                  <strong>Todavía no hay historial</strong>
-                  <span>
-                    Acá van a aparecer las últimas partidas del invocador que
-                    busques.
-                  </span>
-                </p>
-              </div>
-            </section>
+            <Historial
+              key={`historial-${perfilParaHistorial?.riotId ?? 'sin-perfil'}`}
+              riotId={perfilParaHistorial?.riotId ?? null}
+              nombreInvocador={
+                perfilParaHistorial
+                  ? `${perfilParaHistorial.perfil.gameName}#${perfilParaHistorial.perfil.tagLine}`
+                  : null
+              }
+              formatearError={formatearError}
+            />
           )}
         </main>
 

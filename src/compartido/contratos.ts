@@ -44,7 +44,7 @@ export interface ResumenPartida {
 }
 
 export type ResultadoHistorialInvocador =
-  | { ok: true; partidas: ResumenPartida[] }
+  | { ok: true; partidas: ResumenPartida[]; hayMas: boolean }
   | { ok: false; codigo: CodigoErrorBusqueda; mensaje: string };
 
 export interface APIEnlaceSpaceglider {
