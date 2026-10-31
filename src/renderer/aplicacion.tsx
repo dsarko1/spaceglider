@@ -73,6 +73,18 @@ const slugsEmblema: Record<string, string> = {
   GRANDMASTER: 'grandmaster',
   CHALLENGER: 'challenger',
 };
+const abreviaturasRango: Record<string, string> = {
+  IRON: 'HI',
+  BRONZE: 'BR',
+  SILVER: 'PL',
+  GOLD: 'OR',
+  PLATINUM: 'PT',
+  EMERALD: 'ES',
+  DIAMOND: 'DI',
+  MASTER: 'MA',
+  GRANDMASTER: 'GM',
+  CHALLENGER: 'RE',
+};
 
 let solicitudVersionDataDragon: Promise<string | null> | null = null;
 
@@ -392,18 +404,31 @@ function EmblemaRango({
   const [imagenFallida, setImagenFallida] = useState(false);
   const url = urlEmblemaRango(tier);
 
-  if (!url || imagenFallida) return null;
+  useEffect(() => {
+    setImagenFallida(false);
+  }, [tier]);
+
+  if (!url) return null;
 
   return (
-    <img
-      className={`emblema-rango${pequeno ? ' emblema-rango--pequeno' : ''}`}
-      src={url}
-      alt=""
+    <span
+      className={`emblema-rango${pequeno ? ' emblema-rango--pequeno' : ''} ${claseMarcoDeRango(tier)}`}
       aria-hidden="true"
-      loading="lazy"
-      decoding="async"
-      onError={() => setImagenFallida(true)}
-    />
+    >
+      {imagenFallida ? (
+        <span className="emblema-rango__respaldo">
+          {abreviaturasRango[tier ?? ''] ?? '?'}
+        </span>
+      ) : (
+        <img
+          src={url}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setImagenFallida(true)}
+        />
+      )}
+    </span>
   );
 }
 
@@ -500,9 +525,19 @@ function TarjetaPerfil({
   const rangoSeleccionado = colas.find(
     (rango) => rango.queueType === colaActiva,
   );
+  const partidasClasificatorias = rangoSeleccionado
+    ? rangoSeleccionado.wins + rangoSeleccionado.losses
+    : 0;
+  const porcentajeVictorias =
+    partidasClasificatorias > 0 && rangoSeleccionado
+      ? Math.round((rangoSeleccionado.wins / partidasClasificatorias) * 100)
+      : 0;
 
   return (
-    <section className="perfil" aria-labelledby="titulo-perfil">
+    <section
+      className={`perfil ${claseMarcoDeRango(rangoSeleccionado?.tier)}`}
+      aria-labelledby="titulo-perfil"
+    >
       <div className="perfil__encabezado">
         <IconoPerfil
           key={perfil.profileIconId}
@@ -574,29 +609,66 @@ function TarjetaPerfil({
             </div>
             <ul className="rangos__lista">
               {rangoSeleccionado && (
-                <li className="rango" key={rangoSeleccionado.queueType}>
-                  <div>
-                    <p className="rango__cola">
-                      {nombreDeCola(rangoSeleccionado.queueType)}
-                    </p>
-                    <p className="rango__division">
-                      <EmblemaRango tier={rangoSeleccionado.tier} />
-                      <span>
-                        {nombreDeRango(rangoSeleccionado.tier)}
-                        {rangoSeleccionado.rank
-                          ? ` ${rangoSeleccionado.rank}`
-                          : ''}
-                      </span>
-                    </p>
+                <li
+                  className={`rango ${claseMarcoDeRango(rangoSeleccionado.tier)}`}
+                  key={rangoSeleccionado.queueType}
+                >
+                  <div className="rango__principal">
+                    <div className="rango__identidad">
+                      <p className="rango__cola">
+                        {nombreDeCola(rangoSeleccionado.queueType)}
+                      </p>
+                      <p className="rango__division">
+                        <EmblemaRango tier={rangoSeleccionado.tier} />
+                        <span>
+                          {nombreDeRango(rangoSeleccionado.tier)}
+                          {rangoSeleccionado.rank
+                            ? ` ${rangoSeleccionado.rank}`
+                            : ''}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="rango__puntos">
+                      <strong>
+                        {new Intl.NumberFormat('es-AR').format(
+                          rangoSeleccionado.leaguePoints,
+                        )}
+                      </strong>
+                      <span>LP</span>
+                    </div>
                   </div>
-                  <div className="rango__puntos">
-                    <strong>
-                      {new Intl.NumberFormat('es-AR').format(
-                        rangoSeleccionado.leaguePoints,
-                      )}
-                    </strong>
-                    <span>LP</span>
-                  </div>
+                  {partidasClasificatorias > 0 && (
+                    <div
+                      className="rango__estadisticas"
+                      aria-label={`${rangoSeleccionado.wins} victorias, ${rangoSeleccionado.losses} derrotas, ${porcentajeVictorias}% de victorias`}
+                    >
+                      <div className="rango__porcentaje">
+                        <span>Porcentaje de victorias</span>
+                        <strong>{porcentajeVictorias}%</strong>
+                      </div>
+                      <div
+                        className="rango__barra"
+                        role="img"
+                        aria-label={`${porcentajeVictorias}% de victorias`}
+                      >
+                        <span style={{ width: `${porcentajeVictorias}%` }} />
+                      </div>
+                      <div className="rango__partidas">
+                        <span>
+                          <strong>{rangoSeleccionado.wins}</strong> victorias
+                        </span>
+                        <span>
+                          <strong>{rangoSeleccionado.losses}</strong> derrotas
+                        </span>
+                        <span>
+                          {new Intl.NumberFormat('es-AR').format(
+                            partidasClasificatorias,
+                          )}{' '}
+                          partidas
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </li>
               )}
             </ul>
@@ -964,9 +1036,31 @@ export function Aplicacion(): JSX.Element {
               <path d="M3 5h14M3 10h14M3 15h14" />
             </svg>
           </button>
+          {!sidebarExpandida && perfilFijado && (
+            <button
+              className="sidebar__mini"
+              type="button"
+              onClick={mostrarPerfilFijado}
+              aria-label={`Mostrar el perfil fijado de ${perfilFijado.perfil.gameName}#${perfilFijado.perfil.tagLine}`}
+              title={`${perfilFijado.perfil.gameName}#${perfilFijado.perfil.tagLine}`}
+            >
+              <IconoPerfil
+                key={perfilFijado.perfil.profileIconId}
+                profileIconId={perfilFijado.perfil.profileIconId}
+                gameName={perfilFijado.perfil.gameName}
+                claseMarco={`sidebar__mini-icono ${claseMarcoDeRango(
+                  perfilFijado.perfil.rangos.find(
+                    (rango) =>
+                      rango.queueType === colaConMayorElo(perfilFijado.perfil),
+                  )?.tier,
+                )}`}
+              />
+            </button>
+          )}
           {sidebarExpandida &&
             (perfilFijado ? (
               <div className="sidebar__fijado">
+                <span className="sidebar__fijado-etiqueta">Perfil fijado</span>
                 <button
                   className="sidebar__invocador"
                   type="button"
@@ -990,8 +1084,17 @@ export function Aplicacion(): JSX.Element {
                       {perfilFijado.perfil.gameName}#
                       {perfilFijado.perfil.tagLine}
                     </strong>
-                    <span>Nivel {perfilFijado.perfil.summonerLevel}</span>
+                    <span className="sidebar__invocador-nivel">
+                      Nivel {perfilFijado.perfil.summonerLevel}
+                    </span>
                   </span>
+                  <svg
+                    className="sidebar__invocador-flecha"
+                    viewBox="0 0 20 20"
+                    aria-hidden="true"
+                  >
+                    <path d="m7.5 5 5 5-5 5" />
+                  </svg>
                 </button>
                 <button
                   className="sidebar__cambiar"
@@ -1083,11 +1186,15 @@ export function Aplicacion(): JSX.Element {
             title={sidebarExpandida ? undefined : 'Perfil'}
             onClick={() => cambiarSeccion('perfil')}
           >
-            <svg viewBox="0 0 20 20" aria-hidden="true">
-              <circle cx="10" cy="6.5" r="3" />
-              <path d="M4.5 17v-1.5a5.5 5.5 0 0 1 11 0V17z" />
-            </svg>
-            {sidebarExpandida && <span>Perfil</span>}
+            <span className="sidebar__boton-icono" aria-hidden="true">
+              <svg viewBox="0 0 20 20">
+                <circle cx="10" cy="6.5" r="3" />
+                <path d="M4.5 17v-1.5a5.5 5.5 0 0 1 11 0V17z" />
+              </svg>
+            </span>
+            {sidebarExpandida && (
+              <span className="sidebar__boton-texto">Perfil</span>
+            )}
           </button>
           <button
             className="sidebar__boton"
@@ -1098,11 +1205,15 @@ export function Aplicacion(): JSX.Element {
             title={sidebarExpandida ? undefined : 'Historial'}
             onClick={() => cambiarSeccion('historial')}
           >
-            <svg viewBox="0 0 20 20" aria-hidden="true">
-              <circle cx="10" cy="10" r="7" />
-              <path d="M10 6v4l2.5 1.5" />
-            </svg>
-            {sidebarExpandida && <span>Historial</span>}
+            <span className="sidebar__boton-icono" aria-hidden="true">
+              <svg viewBox="0 0 20 20">
+                <circle cx="10" cy="10" r="7" />
+                <path d="M10 6v4l2.5 1.5" />
+              </svg>
+            </span>
+            {sidebarExpandida && (
+              <span className="sidebar__boton-texto">Historial</span>
+            )}
           </button>
           <button
             className="sidebar__boton"
@@ -1113,11 +1224,15 @@ export function Aplicacion(): JSX.Element {
             title={sidebarExpandida ? undefined : 'Maestrías'}
             onClick={() => cambiarSeccion('maestrias')}
           >
-            <svg viewBox="0 0 20 20" aria-hidden="true">
-              <circle cx="10" cy="8" r="4.5" />
-              <path d="M7 11.5 5.5 17l4.5-2 4.5 2L13 11.5" />
-            </svg>
-            {sidebarExpandida && <span>Maestrías</span>}
+            <span className="sidebar__boton-icono" aria-hidden="true">
+              <svg viewBox="0 0 20 20">
+                <circle cx="10" cy="8" r="4.5" />
+                <path d="M7 11.5 5.5 17l4.5-2 4.5 2L13 11.5" />
+              </svg>
+            </span>
+            {sidebarExpandida && (
+              <span className="sidebar__boton-texto">Maestrías</span>
+            )}
           </button>
         </nav>
         {sidebarExpandida && favoritos.length > 0 && (
@@ -1125,7 +1240,12 @@ export function Aplicacion(): JSX.Element {
             className="sidebar__favoritos"
             aria-labelledby="titulo-favoritos"
           >
-            <h2 id="titulo-favoritos">Favoritos</h2>
+            <h2 id="titulo-favoritos">
+              Favoritos
+              <span className="sidebar__favoritos-conteo">
+                {favoritos.length}
+              </span>
+            </h2>
             <ul className="sidebar__favoritos-lista">
               {favoritos.map((favorito) => (
                 <li key={favorito.riotId}>
@@ -1246,7 +1366,17 @@ export function Aplicacion(): JSX.Element {
                           void buscarPerfilGuardado(reciente.riotId)
                         }
                       >
-                        {reciente.gameName}#{reciente.tagLine}
+                        <svg
+                          className="recientes__chip-icono"
+                          viewBox="0 0 20 20"
+                          aria-hidden="true"
+                        >
+                          <circle cx="10" cy="10" r="6.5" />
+                          <path d="M10 6.5V10l2.5 1.5" />
+                        </svg>
+                        <span className="recientes__chip-texto">
+                          {reciente.gameName}#{reciente.tagLine}
+                        </span>
                       </button>
                     ))}
                   </div>

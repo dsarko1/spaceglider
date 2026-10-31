@@ -142,41 +142,61 @@ export function Maestrias({
           </p>
         )}
         {!cargando && maestrias.length > 0 && (
-          <ul className="maestrias__lista">
-            {maestrias.map((maestria, posicion) => (
-              <li className="maestrias__item" key={maestria.campeonId}>
-                <span className="maestrias__puesto" aria-hidden="true">
-                  {posicion + 1}
-                </span>
-                <div className="maestrias__datos">
-                  <strong className="maestrias__campeon">
-                    {maestria.campeon}
-                  </strong>
-                  <span className="maestrias__puntos">
-                    {new Intl.NumberFormat('es-AR').format(maestria.puntos)}{' '}
-                    puntos
-                  </span>
-                  <span className="maestrias__detalle">
-                    Último juego {fechaRelativa(maestria.ultimoJuego)}
-                    {maestria.nivel >= 5 &&
-                      maestria.nivel <= 7 &&
-                      maestria.fichas > 0 &&
-                      ` · ${maestria.fichas} fichas`}
-                  </span>
-                </div>
-                <span
-                  className={`maestrias__nivel${
-                    esPrestigio(maestria.nivel)
-                      ? ' maestrias__nivel--prestigio'
-                      : ''
+          <>
+            <p className="maestrias__resumen" role="status">
+              {maestrias.length} campeones con maestría
+            </p>
+            <ul className="maestrias__lista">
+              {maestrias.map((maestria, posicion) => (
+                <li
+                  className={`maestrias__item${
+                    posicion < 3 ? ` maestrias__item--top${posicion + 1}` : ''
                   }`}
+                  key={maestria.campeonId}
                 >
-                  {esPrestigio(maestria.nivel) ? 'Prestigio' : 'Nivel'}{' '}
-                  <strong>{maestria.nivel}</strong>
-                </span>
-              </li>
-            ))}
-          </ul>
+                  <span className="maestrias__puesto" aria-hidden="true">
+                    {String(posicion + 1).padStart(2, '0')}
+                  </span>
+                  <div className="maestrias__datos">
+                    <strong className="maestrias__campeon">
+                      {maestria.campeon}
+                    </strong>
+                    <span
+                      className="maestrias__puntos maestrias__tooltip"
+                      data-tooltip="Puntos de maestría acumulados"
+                      tabIndex={0}
+                    >
+                      {new Intl.NumberFormat('es-AR').format(maestria.puntos)}{' '}
+                      puntos
+                    </span>
+                    <span
+                      className="maestrias__detalle maestrias__tooltip"
+                      data-tooltip="Tiempo desde la última partida con este campeón"
+                      tabIndex={0}
+                    >
+                      Última partida {fechaRelativa(maestria.ultimoJuego)}
+                      {maestria.nivel >= 5 &&
+                        maestria.nivel <= 7 &&
+                        maestria.fichas > 0 &&
+                        ` · ${maestria.fichas} fichas`}
+                    </span>
+                  </div>
+                  <span
+                    className={`maestrias__nivel maestrias__tooltip${
+                      esPrestigio(maestria.nivel)
+                        ? ' maestrias__nivel--prestigio'
+                        : ''
+                    }`}
+                    data-tooltip="Nivel actual de maestría"
+                    tabIndex={0}
+                  >
+                    {esPrestigio(maestria.nivel) ? 'Prestigio' : 'Nivel'}{' '}
+                    <strong>{maestria.nivel}</strong>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
     </section>

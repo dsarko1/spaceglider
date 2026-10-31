@@ -14,6 +14,10 @@
   --acento-suave: #c8ffbe;
   --borde: rgb(255 255 255 / 9%);
   --borde-fuerte: rgb(255 255 255 / 14%);
+  --borde-interactivo: color-mix(in srgb, var(--acento), transparent 55%);
+  --fondo-interactivo: color-mix(in srgb, var(--acento), transparent 90%);
+  --contorno-foco: 3px solid color-mix(in srgb, var(--acento), transparent 38%);
+  --desplazamiento-foco: 3px;
   --exito: #9bd5b2;
   --error: #ffc2bc;
   --aviso: #f0c452;
