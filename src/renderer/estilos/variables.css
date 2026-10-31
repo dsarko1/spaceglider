@@ -1,0 +1,70 @@
+:root {
+  color-scheme: dark;
+
+  /* Colores */
+  --fondo: #12263a;
+  --superficie: #192f45;
+  --superficie-elevada: #203b53;
+  --superficie-profunda: #091724;
+  --texto: #f1f4f7;
+  --texto-secundario: #9eafbd;
+  --texto-tenue: #718697;
+  --acento: #e2af39;
+  --acento-hover: #f0c452;
+  --acento-suave: #c8ffbe;
+  --borde: rgb(255 255 255 / 9%);
+  --borde-fuerte: rgb(255 255 255 / 14%);
+  --exito: #9bd5b2;
+  --error: #ffc2bc;
+  --aviso: #f0c452;
+
+  /* Espaciado */
+  --espacio-0: 0;
+  --espacio-1: 4px;
+  --espacio-2: 6px;
+  --espacio-3: 8px;
+  --espacio-4: 10px;
+  --espacio-5: 12px;
+  --espacio-6: 16px;
+  --espacio-7: 20px;
+  --espacio-8: 24px;
+  --espacio-9: 32px;
+  --espacio-10: 40px;
+  --espacio-11: 48px;
+  --espacio-12: 64px;
+
+  /* Radios */
+  --radio-pequeno: 7px;
+  --radio-control: 9px;
+  --radio-panel: 12px;
+  --radio-grande: 18px;
+  --radio-redondo: 999px;
+
+  /* Sombras */
+  --sombra-suave: 0 8px 24px rgb(0 0 0 / 16%);
+  --sombra-panel: 0 20px 55px rgb(0 0 0 / 13%);
+  --sombra-flotante: 0 12px 32px rgb(0 0 0 / 28%);
+
+  /* Transiciones */
+  --transicion-rapida: 140ms ease;
+  --transicion-normal: 200ms ease;
+  --transicion-lenta: 280ms ease;
+
+  /* Tipografía */
+  --fuente-base:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --fuente-mono: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+  --texto-xs: 10px;
+  --texto-sm: 12px;
+  --texto-base: 14px;
+  --texto-lg: 18px;
+  --texto-xl: 24px;
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --peso-semi: 700;
+  --peso-negrita: 800;
+  --interlineado-compacto: 1.2;
+  --interlineado-normal: 1.5;
+  --interlineado-amplio: 1.7;
+}

@@ -218,37 +218,51 @@ export function Historial({
           <div
             className="historial__filtro-grupo"
             role="group"
-            aria-label="Filtrar por cola"
+            aria-labelledby="filtro-cola"
           >
-            {['Todas', ...colasPresentes].map((cola) => (
-              <button
-                className="historial__filtro"
-                key={cola}
-                type="button"
-                aria-pressed={filtroCola === cola}
-                onClick={() => setFiltroCola(cola)}
-              >
-                {cola}
-              </button>
-            ))}
+            <span id="filtro-cola" className="historial__filtro-etiqueta">
+              Cola
+            </span>
+            <div className="historial__filtro-opciones">
+              {['Todas', ...colasPresentes].map((cola) => (
+                <button
+                  className="historial__filtro"
+                  key={cola}
+                  type="button"
+                  aria-pressed={filtroCola === cola}
+                  onClick={() => setFiltroCola(cola)}
+                >
+                  {cola}
+                </button>
+              ))}
+            </div>
           </div>
           <div
             className="historial__filtro-grupo"
             role="group"
-            aria-label="Filtrar por resultado"
+            aria-labelledby="filtro-resultado"
           >
-            {['Todas', 'Victorias', 'Derrotas'].map((resultado) => (
-              <button
-                className="historial__filtro"
-                key={resultado}
-                type="button"
-                aria-pressed={filtroResultado === resultado}
-                onClick={() => setFiltroResultado(resultado)}
-              >
-                {resultado}
-              </button>
-            ))}
+            <span id="filtro-resultado" className="historial__filtro-etiqueta">
+              Resultado
+            </span>
+            <div className="historial__filtro-opciones">
+              {['Todas', 'Victorias', 'Derrotas'].map((resultado) => (
+                <button
+                  className="historial__filtro"
+                  key={resultado}
+                  type="button"
+                  aria-pressed={filtroResultado === resultado}
+                  onClick={() => setFiltroResultado(resultado)}
+                >
+                  {resultado}
+                </button>
+              ))}
+            </div>
           </div>
+          <p className="historial__conteo" aria-live="polite">
+            {partidasFiltradas.length}{' '}
+            {partidasFiltradas.length === 1 ? 'partida' : 'partidas'}
+          </p>
         </div>
       )}
 
@@ -322,14 +336,31 @@ export function Historial({
         </div>
       )}
       {datos.hayMas && datos.partidas.length > 0 && (
-        <button
-          className="historial__boton historial__cargar-mas"
-          type="button"
-          onClick={() => void cargarMas()}
-          disabled={cargandoMas}
-        >
-          {cargandoMas ? 'Cargando...' : 'Cargar más'}
-        </button>
+        <div className="historial__paginacion">
+          <span className="historial__paginacion-conteo">
+            {datos.partidas.length} partidas cargadas
+          </span>
+          <button
+            className="historial__boton historial__cargar-mas"
+            type="button"
+            onClick={() => void cargarMas()}
+            disabled={cargandoMas}
+          >
+            {cargandoMas ? (
+              <>
+                <span className="historial__spinner" aria-hidden="true" />
+                Cargando…
+              </>
+            ) : (
+              <>
+                Cargar {cantidadPorPagina} más
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="m5 7.5 5 5 5-5" />
+                </svg>
+              </>
+            )}
+          </button>
+        </div>
       )}
     </section>
   );
